@@ -1,23 +1,27 @@
 image: "rust:latest"
 
-default:
-  before_script:
-    - rustc --version 
-    - cargo --version
-
-stages:
-  - test
-
-services:
-  - postgres:12.2-alpine
 variables:
   POSTGRES_DB: newsletter
+  POSTGRES_PORT: 5432
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: password
   POSTGRES_HOST_AUTH_METHOD: trust
 
+default:
+  before_script:
+    - rustc --version 
+    - cargo --version
+    - cargo install sqlx-cli --no-default-features --features postgres
+    - chmod +x ./scripts/init_db.sh
+    - SKIP_DOCKER=true ./scripts/init_db.sh
+
+stages:
+  - test
+
 test-code:
   stage: test
+  services:
+    - postgres:12.2-alpine
   script:
     - cargo test
     - cargo install cargo-tarpaulin
