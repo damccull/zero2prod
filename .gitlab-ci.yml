@@ -8,6 +8,14 @@ default:
 stages:
   - test
 
+services:
+  - postgres:12.2-alpine
+variables:
+  POSTGRES_DB: newsletter
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST_AUTH_METHOD: trust
+
 test-code:
   stage: test
   script:
@@ -29,6 +37,13 @@ format-code:
 
 audit-code:
   stage: test
+  services:
+    - postgres:12.2-alpine
+  variables:
+    POSTGRES_DB: newsletter
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: password
+    POSTGRES_HOST_AUTH_METHOD: trust
   script:
     - cargo install cargo-audit
     - cargo audit
