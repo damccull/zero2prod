@@ -1,11 +1,9 @@
-use common::spawn_app;
-
 mod common;
+use common::spawn_app;
 
 #[actix_rt::test]
 async fn health_check_works() {
     let address = common::spawn_app();
-
     let client = reqwest::Client::new();
 
     let response = client
@@ -23,6 +21,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
     let app_address = spawn_app();
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40@gmail.com";
+    let mut connection = common::db_connection().await;
 
     let response = client
         .post(&format!("{}/subscriptions", &app_address))
@@ -33,6 +32,14 @@ async fn subscribe_returns_200_for_valid_form_data() {
         .expect("Failed to execute request.");
 
     assert_eq!(200, response.status().as_u16());
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved subscription.");
+
+    assert_eq!(saved.email, "urusula_le_guin@gmail.com");
+    assert_eq!(saved.name, "le guin");
 }
 
 #[actix_rt::test]
