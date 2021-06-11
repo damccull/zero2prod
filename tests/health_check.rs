@@ -54,7 +54,11 @@ async fn subscribe_returns_400_for_invalid_form_data() {
             .await
             .expect("Failed to execute request.");
 
-            assert_eq!(400, response.status().as_u16(),"The API did not fail with a 400 when the payload was {}.", error_message);
+        assert_eq!(
+            400,
+            response.status().as_u16(),
+            "The API did not fail with a 400 when the payload was {}.",
+            error_message
+        );
     }
-
 }
