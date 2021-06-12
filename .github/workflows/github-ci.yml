@@ -77,7 +77,7 @@ jobs:
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
-          cargo install --version=0.5.1 sqlx-cli --no-default-features --features postgres
+          cargo install sqlx-cli --no-default-features --features postgres
           chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
       - uses: actions-rs/clippy-check@v1
