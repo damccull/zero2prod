@@ -1,6 +1,3 @@
-use std::ops::Deref;
-use std::sync::Arc;
-
 use actix_web::web::{self, HttpResponse};
 use chrono::Utc;
 use serde::Deserialize;
@@ -9,19 +6,19 @@ use uuid::Uuid;
 
 pub async fn subscribe(
     form: web::Form<FormData>,
-    db_pool: web::Data<Arc<PgPool>>,
+    db_pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, HttpResponse> {
     sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at)
-        VALUES ($1, $2, $3, $4)
+        VALUES ($1, $2, $3, $4);
         "#,
         Uuid::new_v4(),
         form.email,
         form.name,
         Utc::now()
     )
-    .execute(db_pool.get_ref().deref())
+    .execute(db_pool.get_ref())
     .await
     .map_err(|e| {
         eprintln!("Failed to execute query: {}", e);

@@ -20,7 +20,7 @@ async fn health_check_works() {
 async fn subscribe_returns_200_for_valid_form_data() {
     let app = spawn_app().await;
     let client = reqwest::Client::new();
-    let body = "name=le%20guin&email=ursula_le_guin%40@gmail.com";
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
 
     let response = client
         .post(&format!("{}/subscriptions", &app.address))
@@ -37,7 +37,7 @@ async fn subscribe_returns_200_for_valid_form_data() {
         .await
         .expect("Failed to fetch saved subscription.");
 
-    assert_eq!(saved.email, "urusula_le_guin@gmail.com");
+    assert_eq!(saved.email, "ursula_le_guin@gmail.com");
     assert_eq!(saved.name, "le guin");
 }
 
