@@ -38,7 +38,7 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // yaml, json, etc.
     settings.merge(config::File::with_name("configuration"))?;
     // Merge in a ci-specific config.
-    settings.merge(config::File::with_name("configuration-ci"))?;
+    // settings.merge(config::File::with_name("configuration-ci"))?;
 
     // Try to convert the configuration values into our settings type
     settings.try_into()
