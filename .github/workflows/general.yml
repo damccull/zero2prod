@@ -104,7 +104,8 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: '1.49.0' #TODO: Switch back to stable when the bug gets fixed.
+          #toolchain: stable
           override: true
 
       - name: Migrate database
@@ -116,5 +117,4 @@ jobs:
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
-          version: '0.16.0'
           args: '--ignore-tests'
