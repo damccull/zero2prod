@@ -7,17 +7,21 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions, Connection, PgConnection, PgPool,
 };
-use zero2prod::{configuration::get_configuration, startup::run};
-
-use env_logger::Env;
+use tracing::{subscriber::set_global_default, Subscriber};
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_log::LogTracer;
+use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+use zero2prod::{
+    configuration::get_configuration,
+    startup::run,
+    telemetry::{get_subscriber, init_subscriber},
+};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Initialize the logger
-    // `init` does call `set_logger`, so this is all we need to do
-    // Falling back to printing all logs at info-level or above if
-    // RUST_LOG env var is not set.
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    //********** Initialize the logger
+    let subscriber = get_subscriber("zero2prod".into(), "info".into(), std::io::stdout);
+    init_subscriber(subscriber);
 
     // Panic if config can't be read
     let configuration = get_configuration().expect("Failed to read configuration");
@@ -32,7 +36,6 @@ async fn main() -> std::io::Result<()> {
     let db_pool = PgPool::connect_with(db_connect_options)
         .await
         .expect("Failed to connect to Postgres.");
-    //let db_pool = PgPoolOptions::new()
 
     // Create a `TcpListener` to pass to the web server.
     let listener = TcpListener::bind(format!(
