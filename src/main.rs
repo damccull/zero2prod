@@ -33,14 +33,20 @@ async fn main() -> std::io::Result<()> {
             .log_statements(LevelFilter::Trace)
             .to_owned();
 
-    let db_pool = PgPool::connect_with(db_connect_options)
+    let db_pool = PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_with(db_connect_options)
         .await
-        .expect("Failed to connect to Postgres.");
+        .expect("Failed to connect to postgres.");
+
+    // let db_pool = PgPool::connect_with(db_connect_options)
+    //     .await
+    //     .expect("Failed to connect to Postgres.");
 
     // Create a `TcpListener` to pass to the web server.
     let listener = TcpListener::bind(format!(
-        "127.0.0.1:{}",
-        configuration.application.listen_port
+        "{}:{}",
+        configuration.application.listen_address, configuration.application.listen_port
     ))
     .expect("Failed to bind port.");
     run(listener, db_pool)?.await
