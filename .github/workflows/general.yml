@@ -36,6 +36,8 @@ jobs:
           cargo install sqlx-cli --no-default-features --features postgres
           chmod +x ./scripts/init_db.sh
           SKIP_DOCKER=true ./scripts/init_db.sh
+      - name: Check sqlx metadata file
+        run: cargo sqlx prepare --check -- --bin zero2prod
       - uses: actions-rs/cargo@v1
         with:
           command: test

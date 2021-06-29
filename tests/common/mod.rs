@@ -3,7 +3,8 @@ use std::{net::TcpListener, str::FromStr};
 use log::LevelFilter;
 use once_cell::sync::Lazy;
 use sqlx::{
-    postgres::PgConnectOptions, ConnectOptions, Connection, Executor, PgConnection, PgPool,
+    postgres::{PgConnectOptions, PgPoolOptions},
+    ConnectOptions, Connection, Executor, PgConnection, PgPool,
 };
 use startup::run;
 use uuid::Uuid;
@@ -82,9 +83,11 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .log_statements(LevelFilter::Trace)
         .to_owned();
 
-    let db_pool = PgPool::connect_with(db_connect_options)
+    let db_pool = PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_with(db_connect_options)
         .await
-        .expect("Failed to connect to Postgres.");
+        .expect("Failed to connect to postgres.");
 
     sqlx::migrate!("./migrations")
         .run(&db_pool)
