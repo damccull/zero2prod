@@ -1,8 +1,12 @@
 #![allow(unused)]
 
-use std::net::TcpListener;
+use std::{net::TcpListener, str::FromStr};
 
-use sqlx::{Connection, PgConnection, PgPool};
+use log::LevelFilter;
+use sqlx::{
+    postgres::{PgConnectOptions, PgPoolOptions},
+    ConnectOptions, Connection, PgConnection, PgPool,
+};
 use zero2prod::{configuration::get_configuration, startup::run};
 
 use env_logger::Env;
@@ -19,9 +23,16 @@ async fn main() -> std::io::Result<()> {
     let configuration = get_configuration().expect("Failed to read configuration");
 
     // Create a database connection for the web server.
-    let db_pool = PgPool::connect(&configuration.database.connection_string())
+    let db_connect_options =
+        PgConnectOptions::from_str(&configuration.database.connection_string())
+            .unwrap()
+            .log_statements(LevelFilter::Trace)
+            .to_owned();
+
+    let db_pool = PgPool::connect_with(db_connect_options)
         .await
         .expect("Failed to connect to Postgres.");
+    //let db_pool = PgPoolOptions::new()
 
     // Create a `TcpListener` to pass to the web server.
     let listener = TcpListener::bind(format!(
