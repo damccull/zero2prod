@@ -1,2 +1,4 @@
 application:
-  listen_address: '0.0.0.0'
+  listen_address: 0.0.0.0
+database:
+  require_ssl: true
