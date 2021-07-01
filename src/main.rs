@@ -27,11 +27,11 @@ async fn main() -> std::io::Result<()> {
     let configuration = get_configuration().expect("Failed to read configuration");
 
     // Create a database connection for the web server.
-    let db_connect_options =
-        PgConnectOptions::from_str(&configuration.database.connection_string())
-            .unwrap()
-            .log_statements(LevelFilter::Trace)
-            .to_owned();
+    let db_connect_options = configuration
+        .database
+        .with_db()
+        .log_statements(LevelFilter::Trace)
+        .to_owned();
 
     let db_pool = PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))

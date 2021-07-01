@@ -64,7 +64,7 @@ pub async fn spawn_app() -> TestApp {
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create the database
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+    let mut connection = PgConnection::connect_with(&config.without_db())
         .await
         .expect("Failed to connect to Postgres.");
     connection
@@ -78,8 +78,8 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     //     .expect("Failed to connect to Postgre.");
 
     // Create a database pool for the web server specifying that sqlx logs should be at the 'trace' level.
-    let db_connect_options = PgConnectOptions::from_str(&config.connection_string())
-        .unwrap()
+    let db_connect_options = config
+        .with_db()
         .log_statements(LevelFilter::Trace)
         .to_owned();
 
