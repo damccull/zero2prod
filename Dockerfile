@@ -1,14 +1,21 @@
-FROM lukemathwalker/cargo-chef as planner
-WORKDIR /app
-COPY . .
-# Create a lock-like file for the project
-RUN cargo chef prepare --recipe-path recipe.json
+# FROM lukemathwalker/cargo-chef as planner
+# WORKDIR /app
+# COPY . .
+# # Create a lock-like file for the project
+# RUN cargo chef prepare --recipe-path recipe.json
 
-FROM lukemathwalker/cargo-chef as cacher
+# FROM lukemathwalker/cargo-chef as cacher
+# WORKDIR /app
+# COPY --from=planner /app/recipe.json recipe.json
+# # Build the project dependencies, not the app
+# RUN cargo chef cook --release --recipe-path recipe.json
+
+FROM rust:latest as cacher
 WORKDIR /app
-COPY --from=planner /app/recipe.json recipe.json
 # Build the project dependencies, not the app
-RUN cargo chef cook --release --recipe-path recipe.json
+COPY Cargo.toml Cargo.lock ./
+RUN cargo install cargo-build-deps
+RUN cargo build-deps --release
 
 FROM rust:latest as builder
 WORKDIR /app

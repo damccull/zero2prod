@@ -1,4 +1,4 @@
-use actix_web::web::{self, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -12,14 +12,12 @@ use uuid::Uuid;
         name = %form.name
     )
 )]
-pub async fn subscribe(
-    form: web::Form<FormData>,
-    db_pool: web::Data<PgPool>,
-) -> Result<HttpResponse, HttpResponse> {
-    insert_subscriber(&db_pool, &form)
-        .await
-        .map_err(|_| HttpResponse::InternalServerError().finish())?;
-    Ok(HttpResponse::Ok().finish())
+#[allow(clippy::clippy::async_yields_async)]
+pub async fn subscribe(form: web::Form<FormData>, db_pool: web::Data<PgPool>) -> HttpResponse {
+    match insert_subscriber(&db_pool, &form).await {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }
 
 #[tracing::instrument(
