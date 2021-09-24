@@ -7,7 +7,7 @@ fn spawn_app() -> String {
     // Get the random port from the listener
     let port = listener.local_addr().unwrap().port();
     // Use the listener for spinning up a server
-    let server = zero2prod::run(listener).expect("Failed to bind address");
+    let server = zero2prod::startup::run(listener).expect("Failed to bind address");
     // Execute the server in an Executor
     let _ = tokio::spawn(server);
 
