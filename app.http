@@ -1,0 +1,2 @@
+# Send a health_check - Should return 200 with no body
+http://127.0.0.1:8000/health_check
