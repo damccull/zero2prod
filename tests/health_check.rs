@@ -1,7 +1,8 @@
 use std::net::TcpListener;
 
-use sqlx::{Connection, PgConnection, PgPool};
-use zero2prod::configuration::get_configuration;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
+use uuid::Uuid;
+use zero2prod::configuration::{get_configuration, DatabaseSettings};
 
 pub struct TestApp {
     pub address: String,
@@ -18,12 +19,11 @@ async fn spawn_app() -> TestApp {
     let address = format!("http://127.0.0.1:{}", port);
 
     // Get the app configuration
-    let configuration = get_configuration().expect("Failed to read configuration.");
+    let mut configuration = get_configuration().expect("Failed to read configuration.");
+    configuration.database.database_name = Uuid::new_v4().to_string();
 
     // Get a db connection pool
-    let connection_pool = PgPool::connect(&configuration.database.connection_string())
-        .await
-        .expect("Failed to connect to Postgres.");
+    let connection_pool = configure_database(&configuration.database).await;
 
     // Use the listener for spinning up a server
     let server =
@@ -35,8 +35,29 @@ async fn spawn_app() -> TestApp {
         address,
         db_pool: connection_pool,
     }
+}
 
-    // Return the port the the called
+pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
+    // Create the new database
+    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+        .await
+        .expect("Failed to connect to Postgres.");
+    connection
+        .execute(&*format!(r#"CREATE DATABASE "{}";"#, config.database_name))
+        .await
+        .expect("Failed to create database.");
+
+    // Migrate the database
+    let connection_pool = PgPool::connect(&config.connection_string())
+        .await
+        .expect("Failed to connnect to Postgres.");
+
+    sqlx::migrate!("./migrations")
+        .run(&connection_pool)
+        .await
+        .expect("Failed to migrate the database.");
+
+    connection_pool
 }
 
 #[actix_rt::test]
