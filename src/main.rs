@@ -2,7 +2,7 @@ use std::net::TcpListener;
 
 use env_logger::Env;
 use log::LevelFilter;
-use sqlx::{postgres::PgPoolOptions, ConnectOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions, ConnectOptions};
 use zero2prod::{configuration::get_configuration, startup::run};
 
 #[actix_web::main]
