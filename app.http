@@ -1,2 +1,9 @@
 # Send a health_check - Should return 200 with no body
 http://127.0.0.1:8000/health_check
+
+###
+
+POST http://127.0.0.1:8000/subscriptions HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+name=le%20guin&email=ursula_le_guin%40gmail.com
