@@ -1,6 +1,6 @@
 use std::net::TcpListener;
 
-use actix_web::{App, HttpServer, dev::Server, middleware::Logger, web};
+use actix_web::{dev::Server, middleware::Logger, web, App, HttpServer};
 use sqlx::PgPool;
 
 use crate::routes::{health_check, subscribe};
