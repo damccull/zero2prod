@@ -1,6 +1,7 @@
 use std::net::TcpListener;
 
-use sqlx::{Connection, Executor, PgConnection, PgPool};
+use log::LevelFilter;
+use sqlx::{postgres::PgPoolOptions, ConnectOptions, Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 
@@ -39,7 +40,7 @@ async fn spawn_app() -> TestApp {
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create the new database
-    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+    let mut connection = PgConnection::connect_with(&config.without_db())
         .await
         .expect("Failed to connect to Postgres.");
     connection
@@ -47,11 +48,19 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to create database.");
 
-    // Migrate the database
-    let connection_pool = PgPool::connect(&config.connection_string())
-        .await
-        .expect("Failed to connnect to Postgres.");
+    // Create a database pool for the web server specifying that sqlx logs should be at the 'trace' level.
+    let db_connect_options = config
+        .with_db()
+        .log_statements(LevelFilter::Trace)
+        .to_owned();
 
+    let connection_pool = PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_with(db_connect_options)
+        .await
+        .expect("Failed to connect to Postgres.");
+
+    // Migrate the database
     sqlx::migrate!("./migrations")
         .run(&connection_pool)
         .await
