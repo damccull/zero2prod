@@ -1,7 +1,8 @@
 use std::net::TcpListener;
 
 use env_logger::Env;
-use sqlx::PgPool;
+use log::LevelFilter;
+use sqlx::{postgres::PgPoolOptions, ConnectOptions, PgPool};
 use zero2prod::{configuration::get_configuration, startup::run};
 
 #[actix_web::main]
@@ -12,8 +13,21 @@ async fn main() -> std::io::Result<()> {
     // Panic if config can't be read
     let configuration = get_configuration().expect("Failed to read the configuration.");
 
-    // Set up the database connection
-    let connection_pool = PgPool::connect(&configuration.database.connection_string())
+    // // Set up the database connection
+    // let connection_pool = PgPool::connect(&configuration.database.connection_string())
+    //     .await
+    //     .expect("Failed to connect to Postgres.");
+
+    // Create a database connection for the web server.
+    let db_connect_options = configuration
+        .database
+        .with_db()
+        .log_statements(LevelFilter::Trace)
+        .to_owned();
+
+    let connection_pool = PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_with(db_connect_options)
         .await
         .expect("Failed to connect to Postgres.");
 
