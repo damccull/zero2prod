@@ -2512,6 +2512,7 @@ dependencies = [
  "actix-web",
  "chrono",
  "config",
+ "once_cell",
  "reqwest",
  "serde 1.0.130",
  "sqlx",
