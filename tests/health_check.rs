@@ -1,7 +1,7 @@
 use std::net::TcpListener;
 
-use log::LevelFilter;
 use sqlx::{postgres::PgPoolOptions, ConnectOptions, Connection, Executor, PgConnection, PgPool};
+use tracing::log::LevelFilter;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 

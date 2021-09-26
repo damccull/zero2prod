@@ -1,34 +1,20 @@
 use std::net::TcpListener;
 
-use log::LevelFilter;
 use sqlx::{postgres::PgPoolOptions, ConnectOptions};
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, EnvFilter, Registry};
-use zero2prod::{configuration::get_configuration, startup::run};
+use tracing::log::LevelFilter;
+
+use zero2prod::{
+    configuration::get_configuration,
+    startup::run,
+    telemetry::{get_subscriber, init_subscriber},
+};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     ////
     // Set up logging using tracing, tracing-subscriber, and tracing-bunyan-formatter
-
-    // Redirect all "Log" events to tracing
-    LogTracer::init().expect("Failed to set logger.");
-
-    // Set up the tracing stuff
-    // Print all lines at info-level or above if RUST_LOG has not been set
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new(
-        "zero2prod".into(),
-        // Output the spans to stdout
-        std::io::stdout,
-    );
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer);
-    // Tell the application that the new subscriber we just layered together should be the one to process spans
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber.");
+    let subscriber = get_subscriber("zero2prod".into(), "info".into());
+    init_subscriber(subscriber);
 
     ////
     // Panic if config can't be read
