@@ -18,7 +18,7 @@ ENV SQLX_OFFLINE true
 RUN cargo build --release --bin zero2prod
 
 
-FROM debian:buster-slim AS runtime
+FROM debian:bullseye-slim AS runtime
 WORKDIR /app
 # Install OpenSSL - dynamically linked by some of our dependencies and therefore required.
 RUN apt-get update -y \
