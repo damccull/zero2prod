@@ -1,5 +1,10 @@
+###
 # Send a health_check - Should return 200 with no body
 http://127.0.0.1:8000/health_check
+
+###
+# Health check for digital ocean
+https://placeholder/health_check
 
 ###
 
