@@ -1,4 +1,4 @@
-name: Rust
+name: Tests, lints, coverage
 
 on: [push, pull_request]
 
