@@ -29,4 +29,4 @@ RUN apt-get update -y \
 COPY --from=builder /app/target/release/zero2prod zero2prod
 COPY configuration configuration
 ENV APP_ENVIRONMENT production
-ENTRYPOINT [ "./target/release/zero2prod" ]
+ENTRYPOINT [ "./zero2prod" ]
