@@ -34,9 +34,7 @@ async fn main() -> std::io::Result<()> {
 
     let connection_pool = PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
-        .connect_with(db_connect_options)
-        .await
-        .expect("Failed to connect to Postgres.");
+        .connect_lazy_with(db_connect_options);
 
     // Port comes from the settings file
     let address = format!(
