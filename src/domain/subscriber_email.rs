@@ -42,3 +42,9 @@ mod tests {
         let email = "@domain.com".to_string();
         assert_err!(SubscriberEmail::parse(email));
     }
+
+    #[quickcheck_macros::quickcheck]
+    fn valid_emails_are_parse_successfully(valid_email: String) -> bool {
+        SubscriberEmail::parse(valid_email).is_ok()
+    }
+}
