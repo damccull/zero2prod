@@ -530,9 +530,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-mac"
-version = "0.10.1"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bff07008ec701e8028e2ceb8f83f0e4274ee62bd2dbdc4fefff2e9a91824081a"
+checksum = "b1d1a86f49236c215f271d40892d5fc950490551400b02ef360692c29815c714"
 dependencies = [
  "generic-array",
  "subtle",
@@ -862,9 +862,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.4"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7f3675cfef6a30c8031cf9e6493ebdc3bb3272a3fea3923c4210d1830e6a472"
+checksum = "6c06815895acec637cd6ed6e9662c935b866d20a106f8361892893a7d9234964"
 dependencies = [
  "bytes",
  "fnv",
@@ -923,9 +923,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hmac"
-version = "0.10.1"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1441c6b1e930e2817404b5046f1f989899143a12bf92de603b69f4e0aee1e15"
+checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
  "crypto-mac",
  "digest",
@@ -1805,9 +1805,9 @@ dependencies = [
 
 [[package]]
 name = "serde_qs"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8a72808528a89fa9eca23bbb6a1eb92cb639b881357269b6510f11e50c0f8a9"
+checksum = "c7715380eec75f029a4ef7de39a9200e0a63823176b759d055b613f5a87df6a6"
 dependencies = [
  "percent-encoding",
  "serde 1.0.130",
@@ -1917,9 +1917,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx"
-version = "0.5.7"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e4b94ab0f8c21ee4899b93b06451ef5d965f1a355982ee73684338228498440"
+checksum = "7911b0031a0247af40095838002999c7a52fba29d9739e93326e71a5a1bc9d43"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -1927,9 +1927,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-core"
-version = "0.5.7"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec28b91a01e1fe286d6ba66f68289a2286df023fc97444e1fd86c2fd6d5dc026"
+checksum = "aec89bfaca8f7737439bad16d52b07f1ccd0730520d3bf6ae9d069fe4b641fb1"
 dependencies = [
  "ahash",
  "atoi",
@@ -1951,6 +1951,7 @@ dependencies = [
  "hashlink",
  "hex",
  "hmac",
+ "indexmap",
  "itoa",
  "libc",
  "log",
@@ -1980,13 +1981,12 @@ dependencies = [
 
 [[package]]
 name = "sqlx-macros"
-version = "0.5.7"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dc33c35d54774eed73d54568d47a6ac099aed8af5e1556a017c131be88217d5"
+checksum = "584866c833511b1a152e87a7ee20dee2739746f60c858b3c5209150bc4b466f5"
 dependencies = [
  "dotenv",
  "either",
- "futures",
  "heck",
  "hex",
  "once_cell",
@@ -2003,9 +2003,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-rt"
-version = "0.5.7"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14302b678d9c76b28f2e60115211e25e0aabc938269991745a169753dc00e35c"
+checksum = "0d1bd069de53442e7a320f525a6d4deb8bb0621ac7a55f7eccbc2b58b57f43d0"
 dependencies = [
  "actix-rt",
  "once_cell",
@@ -2305,9 +2305,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-attributes"
-version = "0.1.16"
+version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98863d0dd09fa59a1b79c6750ad80dbda6b75f4e71c437a6a1a8cb91a8bcbd77"
+checksum = "c4f915eb6abf914599c200260efced9203504c4c37380af10cdf3b7d36970650"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2333,9 +2333,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.20"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46125608c26121c81b0c6d693eab5a420e416da7e43c426d2e8f7df8da8a3acf"
+checksum = "1f4ed65637b8390770814083d20756f87bfa2c21bf2f110babdc5438351746e4"
 dependencies = [
  "lazy_static",
 ]
