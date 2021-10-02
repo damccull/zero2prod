@@ -25,6 +25,17 @@ pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
 }
+impl TestApp {
+    /// POSTS a request to the 'subscriptions' API endpoint
+    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+        reqwest::Client::new()
+        .post(&format!("{}/subscriptions", &self.address))
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .body(body)
+        .send()
+        .await.expect("Failed to execute request.")
+    }
+}
 
 // Launch the app in the background
 pub async fn spawn_app() -> TestApp {
