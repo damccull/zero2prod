@@ -83,7 +83,7 @@ pub async fn send_confirmation_email(
 
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
-    skip(new_subscriber, pool),
+    skip(new_subscriber, pool)
 )]
 async fn insert_subscriber(
     pool: &PgPool,
