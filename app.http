@@ -14,8 +14,8 @@ content-type: application/x-www-form-urlencoded
 name=le%20guin&email=ursula_le_guin%40gmail.com
 
 ###
-# Health check for digital ocean
 POST https://zero2prod-cfdxw.ondigitalocean.app/subscriptions HTTP/1.1
+# Insert for digital ocean
 content-type: application/x-www-form-urlencoded
 
 name=le%20guin&email=ursula_le_guin%40gmail.com
