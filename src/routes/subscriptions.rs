@@ -84,10 +84,6 @@ pub async fn send_confirmation_email(
 #[tracing::instrument(
     name = "Saving new subscriber details in the database",
     skip(new_subscriber, pool),
-    // fields(
-    //     new_subscriber_email = %new_subscriber.email,
-    //     new_subscriber_name = %new_subscriber.name.0
-    // )
 )]
 async fn insert_subscriber(
     pool: &PgPool,
@@ -96,7 +92,7 @@ async fn insert_subscriber(
     sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at, status)
-        VALUES ($1, $2, $3, $4, 'confirmed')
+        VALUES ($1, $2, $3, $4, 'pending_confirmation')
         "#,
         Uuid::new_v4(),
         new_subscriber.email.as_ref(),

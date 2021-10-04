@@ -11,6 +11,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     let app = spawn_app().await;
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
 
+    // Need for the /email path to work.
     Mock::given(path("/email"))
         .and(method("POST"))
         .respond_with(ResponseTemplate::new(200))
@@ -22,14 +23,26 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
     // Assert
     assert_eq!(200, response.status().as_u16());
+}
 
-    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+#[actix_rt::test]
+async fn subscribe_persists_the_new_subscriber() {
+    // Arrange
+    let app = spawn_app().await;
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+
+    // Act
+    app.post_subscriptions(body.into()).await;
+
+    // Assert
+    let saved = sqlx::query!("SELECT email, name, status FROM subscriptions",)
         .fetch_one(&app.db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
 
     assert_eq!(saved.email, "ursula_le_guin@gmail.com");
     assert_eq!(saved.name, "le guin");
+    assert_eq!(saved.status, "pending_confirmation");
 }
 
 #[actix_rt::test]
