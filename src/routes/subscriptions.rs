@@ -85,7 +85,7 @@ impl TryFrom<FormData> for NewSubscriber {
 
 #[tracing::instrument(
     name = "Send a confirmation email to a new subscriber",
-    skip(email_client, new_subscriber, base_url, subscription_token)
+    skip(email_client, new_subscriber, base_url, subscription_token),
 )]
 pub async fn send_confirmation_email(
     email_client: &EmailClient,
