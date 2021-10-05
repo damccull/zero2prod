@@ -3,6 +3,7 @@ use serde::Serialize;
 
 use crate::domain::SubscriberEmail;
 
+#[derive(Debug)]
 pub struct EmailClient {
     http_client: Client,
     base_url: String,
@@ -24,6 +25,11 @@ impl EmailClient {
             authorization_token,
         }
     }
+
+    #[tracing::instrument(
+        name = "Sending the confirmation email",
+        skip(recipient, subject, html_content, text_content)
+    )]
     pub async fn send_email(
         &self,
         recipient: SubscriberEmail,
