@@ -28,7 +28,7 @@ impl EmailClient {
 
     #[tracing::instrument(
         name = "Sending the confirmation email",
-        skip(recipient, subject, html_content, text_content)
+        skip(self, recipient, subject, html_content, text_content)
     )]
     pub async fn send_email(
         &self,
