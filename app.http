@@ -4,7 +4,7 @@ http://127.0.0.1:8000/health_check
 
 ###
 # Health check for digital ocean
-https://zero2prod-cfdxw.ondigitalocean.app/health_check
+https://zero2prod-xuaro.ondigitalocean.app/health_check
 
 ###
 
@@ -14,8 +14,24 @@ content-type: application/x-www-form-urlencoded
 name=le%20guin&email=ursula_le_guin%40gmail.com
 
 ###
-POST https://zero2prod-cfdxw.ondigitalocean.app/subscriptions HTTP/1.1
+POST https://zero2prod-xuaro.ondigitalocean.app/subscriptions HTTP/1.1
 # Insert for digital ocean
 content-type: application/x-www-form-urlencoded
 
-name=le%20guin&email=ursula_le_guin%40gmail.com
+name=David&email=david%40digitalmccullough.com
+
+
+###
+POST https://api.postmarkapp.com/email HTTP/1.1
+content-type: application/json
+accept: application/json
+X-Postmark-Server-Token: my-secret-token
+
+{
+    "From": "david+api_sender@digitalmccullough.com",
+    "To": "david+api_receiver@digitalmccullough.com",
+    "Subject": "Postmark test",
+    "TextBody": "Hello dear Postmark user.",
+    "HtmlBody": "<html><body><strong>Hello</strong> dear Postmark user.</body></html>",
+    "MessageStream": "outbound"
+}
