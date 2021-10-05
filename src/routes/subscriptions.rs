@@ -177,3 +177,9 @@ impl std::fmt::Display for StoreTokenError {
         )
     }
 }
+impl std::error::Error for StoreTokenError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        // The compiler transparently casts `&sqlx::Error` into a `&dyn Error`
+        Some(&self.0)
+    }
+}
