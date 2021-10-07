@@ -3,7 +3,6 @@ use std::convert::{TryFrom, TryInto};
 use actix_http::StatusCode;
 use actix_web::{web, HttpResponse, ResponseError};
 use chrono::Utc;
-use config::Source;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
