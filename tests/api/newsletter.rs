@@ -15,6 +15,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
 
     Mock::given(any())
         .respond_with(ResponseTemplate::new(200))
+        .named("MOCK: Don't email to unconfirmed subscribers")
         // We expect ZERO calls to the email server (Postmarkapp) in this test
         .expect(0)
         .mount(&app.email_server)
@@ -53,6 +54,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     Mock::given(path("/email"))
         .and(method("POST"))
         .respond_with(ResponseTemplate::new(200))
+        .named("MOCK: Email to confirmed subscribers")
         .expect(1)
         .mount(&app.email_server)
         .await;
@@ -84,7 +86,7 @@ async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
     let _mock_guard = Mock::given(path("/email"))
         .and(method("POST"))
         .respond_with(ResponseTemplate::new(200))
-        .named("Create unconfirmed subscriber")
+        .named("MOCK: Create unconfirmed subscriber")
         .expect(1)
         .mount_as_scoped(&app.email_server)
         .await;
