@@ -29,7 +29,7 @@ pub struct TestApp {
     pub port: u16,
 }
 impl TestApp {
-    /// POSTS a request to the 'subscriptions' API endpoint
+    /// POSTs a request to the 'subscriptions' API endpoint
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
         reqwest::Client::new()
             .post(&format!("{}/subscriptions", &self.address))
@@ -38,6 +38,16 @@ impl TestApp {
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    /// POSTs a request to the 'newsletters' API endpoint
+    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response{
+        reqwest::Client::new()
+                .post(format!("{}/newsletters", &self.address))
+                .json(&body)
+                .send()
+                .await
+                .expect("Failed to execute request")
     }
 
     /// Extract the confirmation links embedded in the request to the email API.
