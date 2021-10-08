@@ -39,6 +39,7 @@ uuid = { version = "0.8.1", features = ["v4"] }
 validator = "0.14.0"
 rand = { version = "0.8", features = ["std_rng"] }
 thiserror = "1.0.29"
+anyhow = "1.0.44"
 
 
 [dependencies.sqlx]
