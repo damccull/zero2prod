@@ -1,4 +1,4 @@
-use actix_http::StatusCode;
+use actix_http::{header::HeaderMap, StatusCode};
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
 use serde::Deserialize;
@@ -12,7 +12,10 @@ pub async fn publish_newsletter(
     body: web::Json<BodyData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
+    request: web::HttpRequest,
 ) -> Result<HttpResponse, PublishError> {
+    let credentials = basic_authentication(request.headers());
+
     let subscribers = get_confirmed_subscribers(&pool).await?;
 
     for subscriber in subscribers {
@@ -42,6 +45,42 @@ pub async fn publish_newsletter(
     }
 
     Ok(HttpResponse::Ok().finish())
+}
+
+struct Credentials {
+    username: String,
+    password: String,
+}
+
+fn basic_authentication(headers: &HeaderMap) -> Result<Credentials, anyhow::Error> {
+    // Authentication header, if present, must be a valid UTF-8 string.
+    let header_value = headers
+        .get("Authorization")
+        .context("The `Authorization` header was missing")?
+        .to_str()
+        .context("The `Authorization` header was not a valid UTF8 string.")?;
+
+    let base64encoded_segment = header_value
+        .strip_prefix("Basic ")
+        .context("The authorization scheme was not `Basic`.")?;
+
+    let decoded_bytes = base64::decode_config(base64encoded_segment, base64::STANDARD)
+        .context("Failed to base64-decode `Basic` credentials.")?;
+    let decoded_credentials = String::from_utf8(decoded_bytes)
+        .context("The decoded credential string was not valid UTF8.")?;
+
+    // Split credential into two segments at `:`
+    let mut credentials = decoded_credentials.splitn(2, ':');
+    let username = credentials
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("A username must be provided in `Basic` auth."))?
+        .to_string();
+    let password = credentials
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("A password must be provided in `Basic` auth."))?
+        .to_string();
+
+    Ok(Credentials { username, password })
 }
 
 #[derive(Deserialize)]

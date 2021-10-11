@@ -8,7 +8,6 @@ pub use newsletter::*;
 pub use subscriptions::*;
 pub use subscriptions_confirm::*;
 
-
 pub fn error_chain_fmt(
     e: &impl std::error::Error,
     f: &mut std::fmt::Formatter<'_>,
