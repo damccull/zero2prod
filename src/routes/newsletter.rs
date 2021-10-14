@@ -4,10 +4,9 @@ use actix_http::{
 };
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
-use argon2::{Algorithm, Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier, Version};
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use reqwest::header;
 use serde::Deserialize;
-use sha3::Digest;
 use sqlx::PgPool;
 
 use crate::{domain::SubscriberEmail, email_client::EmailClient, routes::error_chain_fmt};
