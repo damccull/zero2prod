@@ -173,4 +173,3 @@ async fn create_confirmed_subscriber(app: &TestApp) {
         .error_for_status()
         .unwrap();
 }
-

@@ -1,4 +1,7 @@
-use actix_http::{StatusCode, header::{HeaderMap, HeaderValue}};
+use actix_http::{
+    header::{HeaderMap, HeaderValue},
+    StatusCode,
+};
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
 use reqwest::header;
