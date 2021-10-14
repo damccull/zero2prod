@@ -102,7 +102,7 @@ async fn validate_credentials(
         r#"
         SELECT user_id
         FROM users
-        WHERE username = $1 AND password = $2
+        WHERE username = $1 AND password_hash = $2
         "#,
         credentials.username,
         credentials.password
