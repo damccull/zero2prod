@@ -129,7 +129,7 @@ async fn requests_missing_authorization_header_are_rejected() {
     // Assert
     assert_eq!(401, response.status().as_u16());
     assert_eq!(
-        r#"Basic  realm="publish""#,
+        r#"Basic realm="publish""#,
         response.headers()["WWW-Authenticate"]
     );
 }
@@ -173,3 +173,4 @@ async fn create_confirmed_subscriber(app: &TestApp) {
         .error_for_status()
         .unwrap();
 }
+

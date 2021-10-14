@@ -1,6 +1,7 @@
-use actix_http::{header::HeaderMap, StatusCode};
+use actix_http::{StatusCode, header::{HeaderMap, HeaderValue}};
 use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
+use reqwest::header;
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -14,7 +15,7 @@ pub async fn publish_newsletter(
     email_client: web::Data<EmailClient>,
     request: web::HttpRequest,
 ) -> Result<HttpResponse, PublishError> {
-    let credentials = basic_authentication(request.headers());
+    let credentials = basic_authentication(request.headers()).map_err(PublishError::AuthError)?;
 
     let subscribers = get_confirmed_subscribers(&pool).await?;
 
@@ -123,6 +124,8 @@ async fn get_confirmed_subscribers(
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
+    #[error("Authentication failed.")]
+    AuthError(#[source] anyhow::Error),
     #[error(transparent)]
     UnknownError(#[from] anyhow::Error),
 }
@@ -134,9 +137,19 @@ impl std::fmt::Debug for PublishError {
 }
 
 impl ResponseError for PublishError {
-    fn status_code(&self) -> StatusCode {
+    fn error_response(&self) -> HttpResponse {
         match self {
-            PublishError::UnknownError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            PublishError::UnknownError(_) => HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
+            PublishError::AuthError(_) => {
+                let mut response = HttpResponse::new(StatusCode::UNAUTHORIZED);
+                let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
+                response
+                    .headers_mut()
+                    // actix_web::http::header provides a collection of constants
+                    // for the names of several well-known/standard HTTP headers
+                    .insert(header::WWW_AUTHENTICATE, header_value);
+                response
+            }
         }
     }
 }
