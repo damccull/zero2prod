@@ -1,5 +1,23 @@
 {
   "db": "PostgreSQL",
+  "771bcff31b853bcc1d6202ee7917004ebb761fa0fce795d3001777d8769c5155": {
+    "query": "\n        SELECT email\n        FROM subscriptions\n        WHERE status = 'confirmed';\n    ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "email",
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "77340bd831e0a1197d0c3fd780445a9f5045416e9598d1299a88e62b86ea2e3a": {
     "query": "SELECT subscriber_id FROM subscription_tokens\n        WHERE subscription_token = $1",
     "describe": {
@@ -43,6 +61,27 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "df5e51c3cbb40ab0f1b52e123a54537961d7390f1edff007b9c12c23c8e3735f": {
+    "query": "\n        SELECT user_id\n        FROM users\n        WHERE username = $1 AND password = $2\n        ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
     }
   },
   "e6822c9e162eabc20338cc27d51a8e80578803ec1589c234d93c3919d14a96a6": {
