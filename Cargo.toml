@@ -42,6 +42,7 @@ thiserror = "1.0.29"
 anyhow = "1.0.44"
 base64 = "0.13"
 sha3 = "0.9"
+argon2 = { version = "0.3", features = ["std"] }
 
 
 [dependencies.sqlx]
