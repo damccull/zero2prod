@@ -137,11 +137,17 @@ impl std::fmt::Debug for PublishError {
 }
 
 impl ResponseError for PublishError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            PublishError::UnknownError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            PublishError::AuthError(_) => StatusCode::UNAUTHORIZED,
+        }
+    }
     fn error_response(&self) -> HttpResponse {
         match self {
-            PublishError::UnknownError(_) => HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
+            PublishError::UnknownError(_) => HttpResponse::new(self.status_code()),
             PublishError::AuthError(_) => {
-                let mut response = HttpResponse::new(StatusCode::UNAUTHORIZED);
+                let mut response = HttpResponse::new(self.status_code());
                 let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
                 response
                     .headers_mut()
