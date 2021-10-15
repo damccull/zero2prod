@@ -1,4 +1,4 @@
-use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version, password_hash::SaltString};
+use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use sqlx::{postgres::PgPoolOptions, ConnectOptions, Connection, Executor, PgConnection, PgPool};
 use tracing::log::LevelFilter;
