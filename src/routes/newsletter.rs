@@ -2,7 +2,7 @@ use actix_http::{
     header::{HeaderMap, HeaderValue},
     StatusCode,
 };
-use actix_web::{web, HttpResponse, ResponseError};
+use actix_web::{rt::task::JoinHandle, web, HttpResponse, ResponseError};
 use anyhow::Context;
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use reqwest::header;
@@ -106,7 +106,7 @@ async fn validate_credentials(
         .map_err(PublishError::UnknownError)?
         .ok_or_else(|| PublishError::AuthError(anyhow::anyhow!("Unknown username.")))?;
 
-    actix_web::rt::task::spawn_blocking(move || {
+    spawn_blocking_with_tracing(move || {
         verify_password_hash(expected_password_hash, credentials.password)
     })
     .await
@@ -116,6 +116,16 @@ async fn validate_credentials(
     .map_err(PublishError::AuthError)?;
 
     Ok(user_id)
+}
+
+// Copy the trait bounds and signature directly from `spawn_blocking`
+pub fn spawn_blocking_with_tracing<F, R>(f: F) -> JoinHandle<R>
+where
+    F: FnOnce() -> R + Send + 'static,
+    R: Send + 'static,
+{
+    let current_span = tracing::Span::current();
+    actix_web::rt::task::spawn_blocking(move || current_span.in_scope(f))
 }
 
 #[tracing::instrument(
