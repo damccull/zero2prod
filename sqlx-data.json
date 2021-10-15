@@ -63,23 +63,28 @@
       "nullable": []
     }
   },
-  "df5e51c3cbb40ab0f1b52e123a54537961d7390f1edff007b9c12c23c8e3735f": {
-    "query": "\n        SELECT user_id\n        FROM users\n        WHERE username = $1 AND password = $2\n        ",
+  "acf1b96c82ddf18db02e71a0e297c822b46f10add52c54649cf599b883165e58": {
+    "query": "\n        SELECT user_id, password_hash\n        FROM users\n        WHERE username = $1\n        ",
     "describe": {
       "columns": [
         {
           "ordinal": 0,
           "name": "user_id",
           "type_info": "Uuid"
+        },
+        {
+          "ordinal": 1,
+          "name": "password_hash",
+          "type_info": "Text"
         }
       ],
       "parameters": {
         "Left": [
-          "Text",
           "Text"
         ]
       },
       "nullable": [
+        false,
         false
       ]
     }
