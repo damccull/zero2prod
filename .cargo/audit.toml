@@ -1,0 +1,7 @@
+[advisories]
+ignore = [
+    # This is unavoidable until chrono and/or time crates fix it by no longer
+    # calling into POSIX version of localtime_r.
+    # See: https://github.com/chronotope/chrono/issues/499
+    "RUSTSEC-2020-0159"
+]
