@@ -2,6 +2,15 @@ use std::{env, process::Command, thread, time::Duration};
 
 use crate::{check_psql_exists, check_sqlx_exists, project_root, DbConfig, DynError};
 
+pub fn sqlx_prepare() -> Result<(), DynError> {
+    // wait_for_postgres()?;
+    // check_sqlx_exists()?;
+
+    println!("Not yet implemented.");
+
+    Ok(())
+}
+
 pub fn docker_db() -> Result<(), DynError> {
     check_psql_exists()?;
 
