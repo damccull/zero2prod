@@ -6,4 +6,10 @@ FROM mcr.microsoft.com/vscode/devcontainers/rust:0-${VARIANT}
 
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends lld clang postgres-client
+    && apt-get -y install --no-install-recommends lld clang postgresql-client
+
+# Install some cargo tools
+RUN cargo install cargo-audit
+RUN cargo install cargo-edit
+RUN cargo install cargo-whatfeatures
+RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
