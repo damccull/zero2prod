@@ -8,6 +8,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/rust:0-${VARIANT}
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends lld clang postgresql-client
 
+USER 1000
 # Install some cargo tools
 RUN cargo install cargo-audit
 RUN cargo install cargo-edit
