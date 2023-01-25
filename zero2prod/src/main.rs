@@ -1,3 +1,5 @@
+use std::net::TcpListener;
+
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use zero2prod::run;
 
@@ -8,7 +10,9 @@ async fn main() {
 
     tracing::info!("Starting server and listening on 8000");
 
-    let _ = run().await;
+    let listener = TcpListener::bind("[::]:8000").expect("failed to bind port 8000");
+
+    let _ = run(listener).await;
 }
 
 /// Sets up a tracing subscriber.

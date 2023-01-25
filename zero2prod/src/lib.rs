@@ -1,18 +1,19 @@
-use std::{future::Future, net::SocketAddr};
+use std::{future::Future, net::TcpListener};
 
 use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 
-pub fn run() -> impl Future<Output = Result<(), hyper::Error>> {
+pub fn run(listener: TcpListener) -> impl Future<Output = hyper::Result<()>> {
     // Create a router that will contain and match all routes for the application
     let app = Router::new().route("/health_check", get(health_check));
 
-    // Listen on localhost on port 8000
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-
-    tracing::debug!("listening on {}", addr);
-
-    // Start the axum server
-    axum::Server::bind(&addr).serve(app.into_make_service())
+    println!(
+        "DEBUG: RUnning Server on {}",
+        listener.local_addr().unwrap().port()
+    );
+    // Start the axum server and set up to use supplied listener
+    axum::Server::from_tcp(listener)
+        .expect("failed to create server from listener")
+        .serve(app.into_make_service())
 }
 
 /// Returns HTTP status code OK (200) to act as a health check
