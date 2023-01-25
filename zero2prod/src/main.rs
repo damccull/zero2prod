@@ -1,31 +1,12 @@
-use std::net::SocketAddr;
-
-use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use zero2prod::run;
 
 #[tokio::main]
 async fn main() {
     // Set up tracing, see the method definition
     setup_tracing();
 
-    // Create a router that will contain and match all routes for the application
-    let app = Router::new().route("/health_check", get(health_check));
-
-    // Listen on localhost on port 8000
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
-
-    tracing::debug!("listening on {}", addr);
-
-    // Start the axum server
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
-}
-
-/// Returns HTTP status code OK (200) to act as a health check
-async fn health_check() -> impl IntoResponse {
-    StatusCode::OK
+    let _ = run().await.await;
 }
 
 /// Sets up a tracing subscriber.
