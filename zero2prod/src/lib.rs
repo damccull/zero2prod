@@ -2,7 +2,7 @@ use std::{future::Future, net::SocketAddr};
 
 use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 
-pub async fn run() -> impl Future<Output = Result<(), hyper::Error>> {
+pub fn run() -> impl Future<Output = Result<(), hyper::Error>> {
     // Create a router that will contain and match all routes for the application
     let app = Router::new().route("/health_check", get(health_check));
 
