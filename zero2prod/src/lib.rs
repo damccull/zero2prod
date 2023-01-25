@@ -6,10 +6,6 @@ pub fn run(listener: TcpListener) -> impl Future<Output = hyper::Result<()>> {
     // Create a router that will contain and match all routes for the application
     let app = Router::new().route("/health_check", get(health_check));
 
-    println!(
-        "DEBUG: RUnning Server on {}",
-        listener.local_addr().unwrap().port()
-    );
     // Start the axum server and set up to use supplied listener
     axum::Server::from_tcp(listener)
         .expect("failed to create server from listener")
