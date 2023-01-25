@@ -6,7 +6,9 @@ async fn main() {
     // Set up tracing, see the method definition
     setup_tracing();
 
-    let _ = run().await.await;
+    tracing::info!("Starting server and listening on 8000");
+
+    let _ = run().await;
 }
 
 /// Sets up a tracing subscriber.
