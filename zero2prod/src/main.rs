@@ -1,18 +1,26 @@
 use std::net::TcpListener;
 
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
-use zero2prod::startup::run;
+use zero2prod::{configuration::get_configuration, startup::run};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up tracing, see the method definition
     setup_tracing();
 
-    tracing::info!("Starting server and listening on 8000");
+    // Set up configuration
+    let configuration = get_configuration().expect("failed to read configuration");
 
-    let listener = TcpListener::bind("[::]:8000").expect("failed to bind port 8000");
+    let port = configuration.application.port;
+    tracing::info!("Starting server and listening on {}", port);
+
+    let listener = TcpListener::bind(format!("[::]:{}", port)).map_err(|e| {
+        tracing::error!("failed to bind port {}", port);
+        e
+    })?;
 
     let _ = run(listener).await;
+    Ok(())
 }
 
 /// Sets up a tracing subscriber.
