@@ -2,7 +2,6 @@
 [alias]
 xtask = "run --package xtask --"
 
-
 # Set up faster linker
 
 # On Windows 
