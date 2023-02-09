@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = configuration.application.port;
     tracing::info!("Starting server and listening on {}", port);
 
-    let listener = TcpListener::bind(format!("[::]:{}", port)).map_err(|e| {
+    let listener = TcpListener::bind(format!("[::]:{port}")).map_err(|e| {
         tracing::error!("failed to bind port {}", port);
         e
     })?;

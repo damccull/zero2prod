@@ -11,7 +11,7 @@ async fn health_check_works() -> Result<(), Box<dyn std::error::Error>> {
 
     // Act
     let response = client
-        .get(format!("{}/health_check", app_address))
+        .get(format!("{app_address}/health_check"))
         .send()
         .await
         .expect("failed to execute request");
@@ -29,10 +29,10 @@ fn spawn_app() -> String {
 
     // Start the server
     let server = zero2prod::startup::run(listener);
-    let _ = tokio::spawn(server);
+    tokio::spawn(server);
 
     // Return the full address so tests can use it
-    format!("http://127.0.0.1:{}", port)
+    format!("http://127.0.0.1:{port}")
 }
 
 #[tokio::test]
@@ -89,8 +89,7 @@ async fn subscribe_returns_400_when_data_is_missing() {
         assert_eq!(
             400,
             response.status().as_u16(),
-            "The API did not fail with 400 when the payload was {}",
-            error_message
+            "The API did not fail with 400 when the payload was {error_message}"
         );
     }
 }
