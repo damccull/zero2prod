@@ -1,6 +1,7 @@
 # Set up xtask
 [alias]
 xtask = "run --package xtask --"
+xtest = "nextest run"
 
 # Set up faster linker
 
