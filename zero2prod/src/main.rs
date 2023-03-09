@@ -1,5 +1,6 @@
 use std::net::TcpListener;
 
+use sqlx::PgPool;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 use zero2prod::{configuration::get_configuration, startup::run};
 
@@ -11,6 +12,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up configuration
     let configuration = get_configuration().expect("failed to read configuration");
 
+    let db = PgPool::connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to Postgres");
+
     let port = configuration.application.port;
     tracing::info!("Starting server and listening on {}", port);
 
@@ -19,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         e
     })?;
 
-    let _ = run(listener).await;
+    let _ = run(listener, db).await;
     Ok(())
 }
 

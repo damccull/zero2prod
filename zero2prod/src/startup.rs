@@ -4,14 +4,16 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use sqlx::PgPool;
 
 use crate::routes::{health_check, subscribe};
 
-pub fn run(listener: TcpListener) -> impl Future<Output = hyper::Result<()>> {
+pub fn run(listener: TcpListener, connection: PgPool) -> impl Future<Output = hyper::Result<()>> {
     // Create a router that will contain and match all routes for the application
     let app = Router::new()
         .route("/health_check", get(health_check))
-        .route("/subscriptions", post(subscribe));
+        .route("/subscriptions", post(subscribe))
+        .with_state(connection);
 
     // Start the axum server and set up to use supplied listener
     axum::Server::from_tcp(listener)
