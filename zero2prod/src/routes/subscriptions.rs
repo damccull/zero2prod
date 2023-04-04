@@ -4,6 +4,12 @@ use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
 pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> impl IntoResponse {
+    tracing::info!(
+        "Adding '{}' '{}' as a new subscriber.",
+        form.email,
+        form.name
+    );
+    tracing::info!("Saving new subscriber details to the database.");
     match sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -17,9 +23,12 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
     .execute(&db)
     .await
     {
-        Ok(_) => StatusCode::OK,
+        Ok(_) => {
+            tracing::info!("New subscriber details have been saved.");
+            StatusCode::OK
+        }
         Err(e) => {
-            tracing::error!("failed to execute query: {}", e);
+            tracing::error!("failed to execute query: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         }
     }
