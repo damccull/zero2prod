@@ -1,8 +1,19 @@
 use tracing::Subscriber;
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use tracing_subscriber::{
+    fmt::{self, MakeWriter},
+    prelude::*,
+    EnvFilter,
+};
 
 /// Sets up a tracing subscriber.
-pub fn get_subscriber(_name: String, env_filter: String) -> impl Subscriber + Send + Sync {
+pub fn get_subscriber<Sink>(
+    _name: String,
+    env_filter: String,
+    _sink: Sink,
+) -> impl Subscriber + Send + Sync
+where
+    Sink: for<'a> MakeWriter<'a> + Send + Sync + 'static,
+{
     let filter_layer =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
 

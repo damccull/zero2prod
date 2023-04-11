@@ -28,8 +28,18 @@ async fn health_check_works() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 static TRACING: Lazy<()> = Lazy::new(|| {
-    let subscriber = get_subscriber("test".into(), "zero2prod=debug,info".into());
-    init_subscriber(subscriber);
+    if std::env::var("TEST_LOG").is_ok() {
+        let subscriber = get_subscriber(
+            "test".into(),
+            "zero2prod=debug,info".into(),
+            std::io::stdout,
+        );
+        init_subscriber(subscriber);
+    } else {
+        let subscriber =
+            get_subscriber("test".into(), "zero2prod=debug,info".into(), std::io::sink);
+        init_subscriber(subscriber);
+    }
 });
 
 async fn spawn_app() -> TestApp {
