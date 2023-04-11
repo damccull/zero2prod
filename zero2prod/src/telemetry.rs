@@ -9,7 +9,7 @@ use tracing_subscriber::{
 pub fn get_subscriber<Sink>(
     _name: String,
     env_filter: String,
-    _sink: Sink,
+    sink: Sink,
 ) -> impl Subscriber + Send + Sync
 where
     Sink: for<'a> MakeWriter<'a> + Send + Sync + 'static,
@@ -17,7 +17,7 @@ where
     let filter_layer =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
 
-    let fmt_layer = fmt::layer().compact().with_target(true);
+    let fmt_layer = fmt::layer().compact().with_target(true).with_writer(sink);
 
     tracing_subscriber::registry()
         .with(filter_layer)
