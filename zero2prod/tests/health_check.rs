@@ -1,8 +1,12 @@
 use std::net::TcpListener;
 
+use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
-use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::{
+    configuration::{get_configuration, DatabaseSettings},
+    telemetry::{get_subscriber, init_subscriber},
+};
 
 #[tokio::test]
 async fn health_check_works() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,7 +27,15 @@ async fn health_check_works() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+static TRACING: Lazy<()> = Lazy::new(|| {
+    let subscriber = get_subscriber("test".into(), "zero2prod=debug,info".into());
+    init_subscriber(subscriber);
+});
+
 async fn spawn_app() -> TestApp {
+    // Set up subscriber for logging
+    Lazy::force(&TRACING);
+
     // Set up listener and cache the port
     let listener = TcpListener::bind("127.0.0.1:0").expect("failed to bind random port");
     let port = listener.local_addr().unwrap().port();
