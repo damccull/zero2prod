@@ -29,7 +29,6 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
 
 #[tracing::instrument(name="Saving new subscriber details in the database", skip(db,form))]
 async fn insert_subscriber(db: &PgPool, form: &FormData) -> Result<(),sqlx::Error> {
-    tracing::info!("saving sub deets");
     sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
