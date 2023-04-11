@@ -1,6 +1,6 @@
 use tracing::Subscriber;
 use tracing_subscriber::{
-    fmt::{self, MakeWriter},
+    fmt::{self, format::FmtSpan, MakeWriter},
     prelude::*,
     EnvFilter,
 };
@@ -17,7 +17,12 @@ where
     let filter_layer =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
 
-    let fmt_layer = fmt::layer().compact().with_target(true).with_writer(sink);
+    let fmt_layer = fmt::layer()
+        .compact()
+        .with_target(true)
+        .with_line_number(true)
+        .with_span_events(FmtSpan::ACTIVE)
+        .with_writer(sink);
 
     tracing_subscriber::registry()
         .with(filter_layer)
