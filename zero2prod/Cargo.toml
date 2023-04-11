@@ -15,6 +15,7 @@ axum = "0.6.12"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 config = "0.13.3"
 hyper = "0.14.25"
+secrecy = { version = "0.8.0", features = ["serde"] }
 serde = { version = "1.0.159", features = ["derive"] }
 sqlx = { version = "0.6.3", features = ["runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate", "runtime-tokio-rustls"], default-features = false }
 tokio = { version = "1.27.0", features = ["full"] }
