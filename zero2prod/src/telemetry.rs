@@ -6,15 +6,12 @@ use tower_http::{
     ServiceBuilderExt,
 };
 use tracing::{Level, Subscriber};
-use tracing_subscriber::{
-    fmt::{self, format::FmtSpan, MakeWriter},
-    prelude::*,
-    EnvFilter,
-};
+use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
+use tracing_subscriber::{fmt::MakeWriter, prelude::*, EnvFilter, Registry};
 
 /// Sets up a tracing subscriber.
 pub fn get_subscriber<Sink>(
-    _name: String,
+    name: String,
     env_filter: String,
     sink: Sink,
 ) -> impl Subscriber + Send + Sync
@@ -24,16 +21,23 @@ where
     let filter_layer =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
 
-    let fmt_layer = fmt::layer()
-        .compact()
-        .with_target(true)
-        .with_line_number(true)
-        .with_span_events(FmtSpan::ACTIVE)
-        .with_writer(sink);
+    // let fmt_layer = fmt::layer()
+    //     .compact()
+    //     .with_target(true)
+    //     .with_line_number(true)
+    //     .with_span_events(FmtSpan::NONE)
+    //     .with_writer(sink);
 
-    tracing_subscriber::registry()
+    // tracing_subscriber::registry()
+    //     .with(filter_layer)
+    //     .with(fmt_layer)
+
+    let bunyan_format = BunyanFormattingLayer::new(name, sink);
+
+    Registry::default()
         .with(filter_layer)
-        .with(fmt_layer)
+        .with(JsonStorageLayer)
+        .with(bunyan_format)
 }
 
 /// Sets the global default subscriber. Should only be called once.
