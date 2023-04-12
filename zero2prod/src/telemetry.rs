@@ -1,12 +1,17 @@
 use axum::{body::HttpBody, Router};
 use tower::ServiceBuilder;
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use tower_http::{
+    request_id::{MakeRequestId, RequestId},
+    trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
+    ServiceBuilderExt,
+};
 use tracing::{Level, Subscriber};
 use tracing_subscriber::{
     fmt::{self, format::FmtSpan, MakeWriter},
     prelude::*,
     EnvFilter,
 };
+use uuid::Uuid;
 
 /// Sets up a tracing subscriber.
 pub fn get_subscriber<Sink>(
@@ -37,6 +42,18 @@ pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
     let _ = tracing::subscriber::set_global_default(subscriber)
         .map_err(|_err| eprintln!("Unable to set global default subscriber"));
 }
+
+#[derive(Clone)]
+struct MakeRequestUuid;
+
+impl MakeRequestId for MakeRequestUuid {
+    fn make_request_id<B>(&mut self, _: &hyper::Request<B>) -> Option<RequestId> {
+        let request_id = Uuid::new_v4().to_string();
+
+        Some(RequestId::new(request_id.parse().unwrap()))
+    }
+}
+
 pub trait RouterExt {
     fn add_axum_tracing_layer(self) -> Self;
 }
@@ -48,13 +65,18 @@ where
 {
     fn add_axum_tracing_layer(self) -> Self {
         self.layer(
-            ServiceBuilder::new().layer(
-                TraceLayer::new_for_http().make_span_with(
-                    DefaultMakeSpan::new()
-                        .include_headers(true)
-                        .level(Level::INFO),
-                ),
-            ),
+            ServiceBuilder::new()
+                .set_x_request_id(MakeRequestUuid)
+                .layer(
+                    TraceLayer::new_for_http()
+                        .make_span_with(
+                            DefaultMakeSpan::new()
+                                .include_headers(true)
+                                .level(Level::INFO),
+                        )
+                        .on_response(DefaultOnResponse::new().include_headers(true)),
+                )
+                .propagate_x_request_id(),
         )
     }
 }

@@ -4,10 +4,12 @@ use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
 #[tracing::instrument(
-    name="Adding a new subscriber",skip(db,form),
-    fields(request_id=%Uuid::new_v4(),
-    subscriber_email=%form.email,
-    subscriber_name=%form.name
+    name="[Adding a new subscriber]",
+    skip(db,form),
+    fields(
+        //request_id=%Uuid::new_v4(),
+        subscriber_email=%form.email,
+        subscriber_name=%form.name
     )
 )]
 pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> impl IntoResponse {
@@ -28,7 +30,7 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
     }
 }
 
-#[tracing::instrument(name = "Saving new subscriber details in the database", skip(db, form))]
+#[tracing::instrument(name = "[Saving new subscriber details in the database]", skip(db, form))]
 async fn insert_subscriber(db: &PgPool, form: &FormData) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
