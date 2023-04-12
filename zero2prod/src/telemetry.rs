@@ -1,7 +1,7 @@
 use axum::{body::HttpBody, Router};
 use tower::ServiceBuilder;
 use tower_http::{
-    request_id::{MakeRequestId, RequestId},
+    request_id::MakeRequestUuid,
     trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
     ServiceBuilderExt,
 };
@@ -11,7 +11,6 @@ use tracing_subscriber::{
     prelude::*,
     EnvFilter,
 };
-use uuid::Uuid;
 
 /// Sets up a tracing subscriber.
 pub fn get_subscriber<Sink>(
@@ -43,16 +42,16 @@ pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
         .map_err(|_err| eprintln!("Unable to set global default subscriber"));
 }
 
-#[derive(Clone)]
-struct MakeRequestUuid;
+// #[derive(Clone)]
+// struct MakeRequestUuid;
 
-impl MakeRequestId for MakeRequestUuid {
-    fn make_request_id<B>(&mut self, _: &hyper::Request<B>) -> Option<RequestId> {
-        let request_id = Uuid::new_v4().to_string();
+// impl MakeRequestId for MakeRequestUuid {
+//     fn make_request_id<B>(&mut self, _: &hyper::Request<B>) -> Option<RequestId> {
+//         let request_id = Uuid::new_v4().to_string();
 
-        Some(RequestId::new(request_id.parse().unwrap()))
-    }
-}
+//         Some(RequestId::new(request_id.parse().unwrap()))
+//     }
+// }
 
 pub trait RouterExt {
     fn add_axum_tracing_layer(self) -> Self;
