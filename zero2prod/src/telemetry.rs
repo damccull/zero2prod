@@ -1,4 +1,7 @@
-use tracing::Subscriber;
+use axum::Router;
+use tower::ServiceBuilder;
+use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use tracing::{Level, Subscriber};
 use tracing_subscriber::{
     fmt::{self, format::FmtSpan, MakeWriter},
     prelude::*,
@@ -33,4 +36,21 @@ where
 pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
     let _ = tracing::subscriber::set_global_default(subscriber)
         .map_err(|_err| eprintln!("Unable to set global default subscriber"));
+}
+pub trait RouterExt {
+    fn add_axum_tracing_layer(self) -> Router;
+}
+
+impl RouterExt for Router {
+    fn add_axum_tracing_layer(self) -> Self {
+        self.layer(
+            ServiceBuilder::new().layer(
+                TraceLayer::new_for_http().make_span_with(
+                    DefaultMakeSpan::new()
+                        .include_headers(true)
+                        .level(Level::INFO),
+                ),
+            ),
+        )
+    }
 }
