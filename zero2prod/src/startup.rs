@@ -1,13 +1,13 @@
 use std::{future::Future, net::TcpListener};
 
 use axum::{
-    routing::{get, post}, Router,
+    routing::{get, post},
+    Router,
 };
 use sqlx::PgPool;
 
-
-use crate::telemetry::RouterExt;
 use crate::routes::{health_check, subscribe};
+use crate::telemetry::RouterExt;
 
 pub fn run(listener: TcpListener, connection: PgPool) -> impl Future<Output = hyper::Result<()>> {
     // Create a router that will contain and match all routes for the application
@@ -22,4 +22,3 @@ pub fn run(listener: TcpListener, connection: PgPool) -> impl Future<Output = hy
         .expect("failed to create server from listener")
         .serve(app.into_make_service())
 }
-
