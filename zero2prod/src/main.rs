@@ -17,11 +17,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("Failed to connect to Postgres");
 
-    let port = configuration.application.port;
-    tracing::info!("Starting server and listening on {}", port);
+    let address = format!(
+        "{}:{}",
+        configuration.application.host, configuration.application.port
+    );
+    tracing::info!("Starting server and listening on {}", address);
 
-    let listener = TcpListener::bind(format!("[::]:{port}")).map_err(|e| {
-        tracing::error!("failed to bind port {}", port);
+    let listener = TcpListener::bind(format!("[::]:{address}")).map_err(|e| {
+        tracing::error!("failed to bind port {}", address);
         e
     })?;
 

@@ -55,4 +55,5 @@ impl DatabaseSettings {
 #[derive(Deserialize)]
 pub struct ApplicationSettings {
     pub port: u16,
+    pub host: String,
 }
