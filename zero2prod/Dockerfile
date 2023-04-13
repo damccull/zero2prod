@@ -46,4 +46,4 @@ COPY configuration configuration
 # Set production mode
 ENV APP_ENVIRONMENT production
 # When the container is run, launch our binary
-ENTRYPOINT [ "./target/release/zero2prod" ]
+ENTRYPOINT [ "./zero2prod" ]
