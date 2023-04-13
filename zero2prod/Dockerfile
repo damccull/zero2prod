@@ -16,5 +16,8 @@ ENV SQLX_OFFLINE true
 # Build the binary using `release` profile for a nice, quick, optimized binary
 RUN cargo build --release
 
+# Set production mode
+ENV APP_ENVIRONMENT production
+
 # When the container is run, launch our binary
 ENTRYPOINT [ "./target/release/zero2prod" ]
