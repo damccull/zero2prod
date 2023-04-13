@@ -7,6 +7,11 @@ primary_region = "lax"
 processes = []
 
 [env]
+  APP_DATABASE__USERNAME = "newsletter"
+  APP_DATABASE__PASSWORD = "Do not put password here. Put it in a 'fly secret'."
+  APP_DATABASE__HOST = "damccull-postgres.flycast"
+  APP_DATABASE__PORT = "5432"
+  APP_DATABASE__DATABASE_NAME = "newsletter"
 
 [experimental]
   auto_rollback = true
