@@ -12,6 +12,7 @@ processes = []
   APP_DATABASE__HOST = "damccull-postgres.flycast"
   APP_DATABASE__PORT = "5432"
   APP_DATABASE__DATABASE_NAME = "newsletter"
+  APP_DATABASE__REQUIRE_SSL = "false"
 
 [experimental]
   auto_rollback = true
