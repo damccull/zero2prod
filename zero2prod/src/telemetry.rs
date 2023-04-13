@@ -21,6 +21,7 @@ where
     let filter_layer =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
 
+    // --This code uses tracing-subscriber--
     // let fmt_layer = fmt::layer()
     //     .compact()
     //     .with_target(true)
@@ -31,6 +32,7 @@ where
     // tracing_subscriber::registry()
     //     .with(filter_layer)
     //     .with(fmt_layer)
+    // ----
 
     let bunyan_format = BunyanFormattingLayer::new(name, sink);
 
@@ -45,17 +47,6 @@ pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
     let _ = tracing::subscriber::set_global_default(subscriber)
         .map_err(|_err| eprintln!("Unable to set global default subscriber"));
 }
-
-// #[derive(Clone)]
-// struct MakeRequestUuid;
-
-// impl MakeRequestId for MakeRequestUuid {
-//     fn make_request_id<B>(&mut self, _: &hyper::Request<B>) -> Option<RequestId> {
-//         let request_id = Uuid::new_v4().to_string();
-
-//         Some(RequestId::new(request_id.parse().unwrap()))
-//     }
-// }
 
 pub trait RouterExt {
     fn add_axum_tracing_layer(self) -> Self;
