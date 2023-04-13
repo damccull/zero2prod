@@ -1,7 +1,10 @@
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use serde_aux::field_attributes::deserialize_number_from_string;
-use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use sqlx::{
+    postgres::{PgConnectOptions, PgSslMode},
+    ConnectOptions,
+};
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // Grab the execution directory
@@ -84,7 +87,13 @@ pub struct DatabaseSettings {
 
 impl DatabaseSettings {
     pub fn with_db(&self) -> PgConnectOptions {
-        self.without_db().database(&self.database_name)
+        let mut options = self.without_db().database(&self.database_name);
+
+        // Set sqlx's log level to TRACE so that user must specify TRACE if they
+        // want to see the sqlx logs. This prevents log spam.
+        options.log_statements(tracing::log::LevelFilter::Trace);
+
+        options
     }
 
     pub fn without_db(&self) -> PgConnectOptions {
