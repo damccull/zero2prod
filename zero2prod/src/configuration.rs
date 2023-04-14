@@ -35,7 +35,10 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         )
         .build()?;
 
-    settings.try_deserialize::<Settings>()
+    let settings = settings.try_deserialize::<Settings>();
+    tracing::debug!("Settings values: {:?}", &settings);
+
+    settings
 }
 
 /// The possible runtime environments for this application.
@@ -68,13 +71,13 @@ impl TryFrom<String> for Environment {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
@@ -112,7 +115,7 @@ impl DatabaseSettings {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
