@@ -1,7 +1,8 @@
 [advisories]
 ignore = [
+    ### Fixed in chrono 0.4.20 - will be removed in the future.
     # This is unavoidable until chrono and/or time crates fix it by no longer
     # calling into POSIX version of localtime_r.
     # See: https://github.com/chronotope/chrono/issues/499
-    "RUSTSEC-2020-0159"
+    #"RUSTSEC-2020-0159"
 ]
