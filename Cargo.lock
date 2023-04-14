@@ -2291,6 +2291,7 @@ dependencies = [
  "axum",
  "chrono",
  "config",
+ "http",
  "hyper",
  "once_cell",
  "reqwest",
