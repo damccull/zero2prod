@@ -3,6 +3,8 @@ use chrono::Utc;
 use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
+use crate::domain::{NewSubscriber, SubscriberName};
+
 #[tracing::instrument(
     name="[Adding a new subscriber]",
     skip(db,form),
@@ -18,7 +20,13 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
         form.email,
         form.name
     );
-    match insert_subscriber(&db, &form).await {
+
+    let new_subscriber = NewSubscriber {
+        email: form.email,
+        name: SubscriberName::parse(form.name),
+    };
+
+    match insert_subscriber(&db, &new_subscriber).await {
         Ok(_) => {
             tracing::info!("New subscriber details have been saved.");
             StatusCode::OK
@@ -32,17 +40,17 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
 
 #[tracing::instrument(
     name = "[Saving new subscriber details in the database]",
-    skip(db, form)
+    skip(db, new_subscriber)
 )]
-async fn insert_subscriber(db: &PgPool, form: &FormData) -> Result<(), sqlx::Error> {
+async fn insert_subscriber(db: &PgPool, new_subscriber: &NewSubscriber) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
     INSERT INTO subscriptions (id, email, name, subscribed_at)
     VALUES ($1, $2, $3, $4)
     "#,
         Uuid::new_v4(),
-        form.email,
-        form.name,
+        new_subscriber.email,
+        new_subscriber.name.as_ref(),
         Utc::now()
     )
     .execute(db)
