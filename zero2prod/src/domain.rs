@@ -38,7 +38,7 @@ pub struct NewSubscriber {
 }
 
 #[cfg(test)]
-mod tests {
+mod subscribername_tests {
     use crate::domain::SubscriberName;
     use claims::{assert_err, assert_ok};
 
