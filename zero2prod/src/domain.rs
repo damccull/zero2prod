@@ -4,7 +4,7 @@ pub struct SubscriberName(String);
 
 impl SubscriberName {
     /// Construct a valid [`SubscriberName`] from a String.
-    pub fn parse(value: String) -> SubscriberName {
+    pub fn parse(value: String) -> Result<SubscriberName, String> {
         // Check if the string is empty or just whitespace characters
         let is_empty_or_whitespace = value.trim().is_empty();
 
@@ -18,9 +18,9 @@ impl SubscriberName {
             value.chars().any(|g| forbidden_characters.contains(&g));
 
         if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
-            panic!("{} is not a valid subscriber name", value);
+            Err(format!("{} is not a valid subscriber name", value))
         } else {
-            Self(value)
+            Ok(Self(value))
         }
     }
 }

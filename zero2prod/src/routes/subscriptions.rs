@@ -23,7 +23,7 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
 
     let new_subscriber = NewSubscriber {
         email: form.email,
-        name: SubscriberName::parse(form.name),
+        name: SubscriberName::parse(form.name).expect("Name validation failed."),
     };
 
     match insert_subscriber(&db, &new_subscriber).await {
