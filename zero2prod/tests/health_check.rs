@@ -171,7 +171,7 @@ async fn subscribe_returns_422_when_fields_are_present_but_invalid() {
     for (body, description) in test_cases {
         // Act
         let response = client
-            .post(&format!("{}/subscriptions", &app.address))
+            .post(&format!("{}/subscriptions", app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body)
             .send()
@@ -180,7 +180,7 @@ async fn subscribe_returns_422_when_fields_are_present_but_invalid() {
 
         // Assert
         assert_eq!(
-            400,
+            422,
             response.status().as_u16(),
             "The API did not return a 400 Bad Request when the payload was {}",
             description
