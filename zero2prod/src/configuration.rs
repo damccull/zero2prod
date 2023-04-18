@@ -6,6 +6,8 @@ use sqlx::{
     ConnectOptions,
 };
 
+use crate::domain::SubscriberEmail;
+
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     // Grab the execution directory
     let base_path = std::env::current_dir().expect("Failed to determine the current directory");
@@ -45,6 +47,14 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
+    pub email_client: EmailClientSettings,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ApplicationSettings {
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub port: u16,
+    pub host: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -86,10 +96,15 @@ impl DatabaseSettings {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct ApplicationSettings {
-    #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub port: u16,
-    pub host: String,
+pub struct EmailClientSettings {
+    pub base_url: String,
+    pub sender_email: String,
+}
+
+impl EmailClientSettings {
+    pub fn sender(&self) -> Result<SubscriberEmail, String> {
+        SubscriberEmail::parse(self.sender_email.clone())
+    }
 }
 
 /// The possible runtime environments for this application.
