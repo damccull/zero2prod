@@ -16,7 +16,7 @@ impl EmailClient {
             sender,
         }
     }
-    
+
     pub async fn send_email(
         &self,
         recipient: SubscriberEmail,
