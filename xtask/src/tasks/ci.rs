@@ -19,6 +19,7 @@ pub fn ci() -> Result<(), DynError> {
         .args(["build", "-p", "zero2prod"])
         .status()?;
 
+    //TODO: Check if nextest is installed and run it instead of test
     println!("Running `cargo test`...");
     let test = Command::new("cargo")
         .args(["test", "-p", "zero2prod"])
