@@ -21,9 +21,16 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
         form.name
     );
 
+    let name = match SubscriberName::parse(form.name) {
+        Ok(name) => name,
+        Err(_) => {
+            return StatusCode::UNPROCESSABLE_ENTITY;
+        }
+    };
+
     let new_subscriber = NewSubscriber {
         email: form.email,
-        name: SubscriberName::parse(form.name).expect("Name validation failed."),
+        name,
     };
 
     match insert_subscriber(&db, &new_subscriber).await {
