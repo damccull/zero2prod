@@ -6,3 +6,5 @@ database:
 email_client:
   base_url: "https://api.postmarkapp.com"
   sender_email: "set this in the environment variables"
+  authorization_token: "set this in an environment variable"
+
