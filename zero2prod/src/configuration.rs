@@ -41,40 +41,10 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     settings
 }
 
-/// The possible runtime environments for this application.
-pub enum Environment {
-    Local,
-    Production,
-}
-
-impl Environment {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Environment::Local => "local",
-            Environment::Production => "production",
-        }
-    }
-}
-
-impl TryFrom<String> for Environment {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.to_lowercase().as_str() {
-            "local" => Ok(Self::Local),
-            "production" => Ok(Self::Production),
-            other => Err(format!(
-                "{} is not a supported environment. Use either 'local' or 'production'",
-                other
-            )),
-        }
-    }
-}
-
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    pub database: DatabaseSettings,
     pub application: ApplicationSettings,
+    pub database: DatabaseSettings,
 }
 
 #[derive(Debug, Deserialize)]
@@ -120,4 +90,34 @@ pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
+}
+
+/// The possible runtime environments for this application.
+pub enum Environment {
+    Local,
+    Production,
+}
+
+impl Environment {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Environment::Local => "local",
+            Environment::Production => "production",
+        }
+    }
+}
+
+impl TryFrom<String> for Environment {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "local" => Ok(Self::Local),
+            "production" => Ok(Self::Production),
+            other => Err(format!(
+                "{} is not a supported environment. Use either 'local' or 'production'",
+                other
+            )),
+        }
+    }
 }
