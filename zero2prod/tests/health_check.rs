@@ -60,6 +60,7 @@ async fn spawn_app() -> TestApp {
     let connection_pool = configure_database(&configuration.database).await;
 
     // Build an email clientz
+    let timeout = configuration.email_client.timeout();
     let sender_email = configuration
         .email_client
         .sender()
@@ -68,6 +69,7 @@ async fn spawn_app() -> TestApp {
         configuration.email_client.base_url,
         sender_email,
         configuration.email_client.authorization_token,
+        timeout,
     );
 
     // Start the server

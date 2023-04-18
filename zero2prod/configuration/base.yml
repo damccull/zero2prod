@@ -11,3 +11,4 @@ email_client:
   base_url: "localhost"
   sender_email: "test@gmail.com"
   authorization_token: "set this in an environment variable"
+  timeout_milliseconds: 10000

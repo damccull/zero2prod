@@ -20,6 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect_lazy_with(configuration.database.with_db());
 
     // Build an email clientz
+    let timeout = configuration.email_client.timeout();
     let sender_email = configuration
         .email_client
         .sender()
@@ -28,6 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         configuration.email_client.base_url,
         sender_email,
         configuration.email_client.authorization_token,
+        timeout,
     );
 
     let address = format!(
