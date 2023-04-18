@@ -182,7 +182,7 @@ async fn subscribe_returns_422_when_fields_are_present_but_invalid() {
         assert_eq!(
             422,
             response.status().as_u16(),
-            "The API did not return a 400 Bad Request when the payload was {}",
+            "The API did not return a 422 Unprocessable Entity when the payload was {}",
             description
         );
     }
