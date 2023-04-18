@@ -3,13 +3,12 @@ use chrono::Utc;
 use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
-use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
+use crate::domain::NewSubscriber;
 
 #[tracing::instrument(
     name="[Adding a new subscriber]",
     skip(db,form),
     fields(
-        //request_id=%Uuid::new_v4(),
         subscriber_email=%form.email,
         subscriber_name=%form.name
     )
@@ -21,21 +20,13 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
         form.name
     );
 
-    let name = match SubscriberName::parse(form.name) {
-        Ok(name) => name,
-        Err(_) => {
+    let new_subscriber = match form.try_into() {
+        Ok(subscriber) => subscriber,
+        Err(e) => {
+            tracing::error!("failed to parse subscriber: {:?}", e);
             return StatusCode::UNPROCESSABLE_ENTITY;
         }
     };
-
-    let email = match SubscriberEmail::parse(form.email) {
-        Ok(email) => email,
-        Err(_) => {
-            return StatusCode::UNPROCESSABLE_ENTITY;
-        }
-    };
-
-    let new_subscriber = NewSubscriber { email, name };
 
     match insert_subscriber(&db, &new_subscriber).await {
         Ok(_) => {
@@ -76,6 +67,6 @@ async fn insert_subscriber(db: &PgPool, new_subscriber: &NewSubscriber) -> Resul
 #[derive(Deserialize)]
 #[allow(dead_code)]
 pub struct FormData {
-    email: String,
-    name: String,
+    pub email: String,
+    pub name: String,
 }
