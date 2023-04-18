@@ -33,7 +33,7 @@ impl AsRef<str> for SubscriberName {
 }
 
 #[cfg(test)]
-mod subscribername_tests {
+mod tests {
     use crate::domain::SubscriberName;
     use claims::{assert_err, assert_ok};
 
