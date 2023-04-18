@@ -31,7 +31,7 @@ impl EmailClient {
         subject: &str,
         html_content: &str,
         text_content: &str,
-    ) -> Result<(), String> {
+    ) -> Result<(), reqwest::Error> {
         //TODO: Replace this with Url::join() eventually
         let url = format!("{}/email", self.base_url);
 
@@ -43,14 +43,15 @@ impl EmailClient {
             text_body: text_content.to_owned(),
         };
 
-        let builder = self
-            .http_client
+        self.http_client
             .post(&url)
             .header(
                 "X-Postmark-Server-Token",
                 self.authorization_token.expose_secret(),
             )
-            .json(&request_body);
+            .json(&request_body)
+            .send()
+            .await?;
 
         Ok(())
     }
