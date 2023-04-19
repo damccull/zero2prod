@@ -5,13 +5,44 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use sqlx::PgPool;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 
-use crate::telemetry::RouterExt;
+use crate::{configuration::Settings, telemetry::RouterExt};
 use crate::{
     email_client::EmailClient,
     routes::{health_check, subscribe},
 };
+
+pub async fn build(
+    configuration: Settings,
+) -> Result<impl Future<Output = hyper::Result<()>>, Box<dyn std::error::Error>> {
+    // Build a database connection pool
+    let db = PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy_with(configuration.database.with_db());
+
+    // Build an email clientz
+    let timeout = configuration.email_client.timeout();
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender address.");
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+        timeout,
+    );
+    let address = format!(
+        "{}:{}",
+        configuration.application.host, configuration.application.port
+    );
+    let listener = TcpListener::bind(address.to_string()).map_err(|e| {
+        tracing::error!("failed to bind port {}", address);
+        e
+    })?;
+    Ok(run(listener, db, email_client))
+}
 
 pub fn run(
     listener: TcpListener,
