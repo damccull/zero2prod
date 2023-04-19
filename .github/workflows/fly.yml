@@ -3,7 +3,7 @@ name: Fly Deploy
 on:
   workflow_run:
     workflows:
-      - "general"
+      - CI/CD Prechecks
     branches:
       - main
     types:
