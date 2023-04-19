@@ -1,4 +1,4 @@
-name: Rust
+name: CI/CD Prechecks
 
 on:
   # NB: this differs from the book's project!
