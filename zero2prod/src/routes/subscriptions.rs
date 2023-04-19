@@ -9,16 +9,16 @@ use crate::{domain::NewSubscriber, email_client::EmailClient};
 
 #[tracing::instrument(
     name="[Adding a new subscriber]",
-    skip(form, db, email_client),
+    skip(db, email_client, form),
     fields(
         subscriber_email=%form.email,
         subscriber_name=%form.name
     )
 )]
 pub async fn subscribe(
-    Form(form): Form<FormData>,
     State(db): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
+    Form(form): Form<FormData>,
 ) -> impl IntoResponse {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
