@@ -34,34 +34,45 @@ pub async fn subscribe(
         }
     };
 
-    match insert_subscriber(&db, &new_subscriber).await {
-        Ok(_) => {
-            tracing::info!("New subscriber details have been saved.");
-        }
-        Err(e) => {
-            tracing::error!("failed to save subscriber details: {:?}", e);
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
+    if insert_subscriber(&db, &new_subscriber).await.is_err() {
+        return StatusCode::INTERNAL_SERVER_ERROR;
     }
+    if send_confirmation_email(email_client, new_subscriber)
+        .await
+        .is_err()
+    {
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    }
+    StatusCode::OK
+}
 
-    match email_client
+#[tracing::instrument(
+    name="Send confirmation email"
+    skip(email_client, new_subscriber)
+)]
+async fn send_confirmation_email(
+    email_client: Arc<EmailClient>,
+    new_subscriber: NewSubscriber,
+) -> Result<(), reqwest::Error> {
+    let confirmation_link = "https://there-is-no-such-domain.com/subscriptions/confirm";
+    let html_body = format!(
+        "Welcome to our newsletter!<br />\
+                Click <a href=\"{}\">here</a> to confirm your subscription.",
+        confirmation_link
+    );
+    let plain_body = format!(
+        "Welcome to our newsletter!<br />\
+                Visit {} to confirm your subscription.",
+        confirmation_link
+    );
+    email_client
         .send_email(
             new_subscriber.clone().email,
             "Welcome!",
-            "Welcome to our newsletter!",
-            "Welcome to our newsletter!",
+            &html_body,
+            &plain_body,
         )
         .await
-    {
-        Ok(_) => {
-            tracing::info!("Confirmation email sent to {:?}", new_subscriber.email);
-        }
-        Err(e) => {
-            tracing::error!("failed to send confirmation email: {}", e);
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
-    }
-    StatusCode::OK
 }
 
 #[tracing::instrument(
