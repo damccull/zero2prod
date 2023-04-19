@@ -1,19 +1,25 @@
+use std::sync::Arc;
+
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Form};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
-use crate::domain::NewSubscriber;
+use crate::{domain::NewSubscriber, email_client::EmailClient};
 
 #[tracing::instrument(
     name="[Adding a new subscriber]",
-    skip(db,form),
+    skip(form, db, email_client),
     fields(
         subscriber_email=%form.email,
         subscriber_name=%form.name
     )
 )]
-pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> impl IntoResponse {
+pub async fn subscribe(
+    Form(form): Form<FormData>,
+    State(db): State<PgPool>,
+    State(email_client): State<Arc<EmailClient>>,
+) -> impl IntoResponse {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
         form.email,
@@ -31,13 +37,31 @@ pub async fn subscribe(State(db): State<PgPool>, Form(form): Form<FormData>) -> 
     match insert_subscriber(&db, &new_subscriber).await {
         Ok(_) => {
             tracing::info!("New subscriber details have been saved.");
-            StatusCode::OK
         }
         Err(e) => {
             tracing::error!("failed to save subscriber details: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+            return StatusCode::INTERNAL_SERVER_ERROR;
         }
     }
+
+    match email_client
+        .send_email(
+            new_subscriber.clone().email,
+            "Welcome!",
+            "Welcome to our newsletter!",
+            "Welcome to our newsletter!",
+        )
+        .await
+    {
+        Ok(_) => {
+            tracing::info!("Confirmation email sent to {:?}", new_subscriber.email);
+        }
+        Err(e) => {
+            tracing::error!("failed to send confirmation email: {}", e);
+            return StatusCode::INTERNAL_SERVER_ERROR;
+        }
+    }
+    StatusCode::OK
 }
 
 #[tracing::instrument(
