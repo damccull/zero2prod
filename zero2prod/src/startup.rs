@@ -1,54 +1,77 @@
-use std::{future::Future, net::TcpListener, sync::Arc};
+use std::{net::TcpListener, sync::Arc};
 
 use axum::{
     extract::FromRef,
-    routing::{get, post},
-    Router,
+    routing::{get, post, IntoMakeService},
+    Router, Server,
 };
+use hyper::server::conn::AddrIncoming;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
-use crate::{configuration::Settings, telemetry::RouterExt};
+use crate::{
+    configuration::{DatabaseSettings, Settings},
+    telemetry::RouterExt,
+};
 use crate::{
     email_client::EmailClient,
     routes::{health_check, subscribe},
 };
 
-pub async fn build(
-    configuration: Settings,
-) -> Result<impl Future<Output = hyper::Result<()>>, Box<dyn std::error::Error>> {
-    // Build a database connection pool
-    let db = PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
-        .connect_lazy_with(configuration.database.with_db());
+pub type AppServer = Server<AddrIncoming, IntoMakeService<Router>>;
 
-    // Build an email clientz
-    let timeout = configuration.email_client.timeout();
-    let sender_email = configuration
-        .email_client
-        .sender()
-        .expect("Invalid sender address.");
-    let email_client = EmailClient::new(
-        configuration.email_client.base_url,
-        sender_email,
-        configuration.email_client.authorization_token,
-        timeout,
-    );
-    let address = format!(
-        "{}:{}",
-        configuration.application.host, configuration.application.port
-    );
-    let listener = TcpListener::bind(address.to_string()).map_err(|e| {
-        tracing::error!("failed to bind port {}", address);
-        e
-    })?;
-    Ok(run(listener, db, email_client))
+pub struct Application {
+    port: u16,
+    server: AppServer,
 }
 
-pub fn run(
-    listener: TcpListener,
-    db_pool: PgPool,
-    email_client: EmailClient,
-) -> impl Future<Output = hyper::Result<()>> {
+impl Application {
+    pub async fn build(configuration: Settings) -> Result<Self, Box<dyn std::error::Error>> {
+        // Get database pool
+        let db_pool = get_db_pool(&configuration.database);
+
+        // Build an email client
+        let timeout = configuration.email_client.timeout();
+        let sender_email = configuration
+            .email_client
+            .sender()
+            .expect("Invalid sender address.");
+        let email_client = EmailClient::new(
+            configuration.email_client.base_url,
+            sender_email,
+            configuration.email_client.authorization_token,
+            timeout,
+        );
+
+        let address = format!(
+            "{}:{}",
+            configuration.application.host, configuration.application.port
+        );
+        let listener = TcpListener::bind(address.to_string()).map_err(|e| {
+            tracing::error!("failed to bind port {}", address);
+            e
+        })?;
+        let port = listener.local_addr().unwrap().port();
+        let server = run(listener, db_pool, email_client);
+        Ok(Self { port, server })
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+
+    pub async fn run_until_stopped(self) -> hyper::Result<()> {
+        self.server.await
+    }
+}
+
+/// Get a database connection pool.
+pub fn get_db_pool(configuration: &DatabaseSettings) -> PgPool {
+    PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy_with(configuration.with_db())
+}
+
+pub fn run(listener: TcpListener, db_pool: PgPool, email_client: EmailClient) -> AppServer {
     // Build app state
     let app_state = AppState {
         db_pool,

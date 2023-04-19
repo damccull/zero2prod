@@ -1,9 +1,4 @@
-use std::net::TcpListener;
-
-use sqlx::postgres::PgPoolOptions;
-use zero2prod::{
-    configuration::get_configuration, email_client::EmailClient, startup::run, telemetry,
-};
+use zero2prod::{configuration::get_configuration, startup::Application, telemetry};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -14,35 +9,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set up configuration
     let configuration = get_configuration().expect("failed to read configuration");
 
-    // Build a database connection pool
-    let db = PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
-        .connect_lazy_with(configuration.database.with_db());
-
-    // Build an email clientz
-    let timeout = configuration.email_client.timeout();
-    let sender_email = configuration
-        .email_client
-        .sender()
-        .expect("Invalid sender address.");
-    let email_client = EmailClient::new(
-        configuration.email_client.base_url,
-        sender_email,
-        configuration.email_client.authorization_token,
-        timeout,
-    );
-
-    let address = format!(
-        "{}:{}",
-        configuration.application.host, configuration.application.port
-    );
-    tracing::info!("Starting server and listening on {}", address);
-
-    let listener = TcpListener::bind(address.to_string()).map_err(|e| {
-        tracing::error!("failed to bind port {}", address);
-        e
-    })?;
-
-    let _ = run(listener, db, email_client).await;
+    let app = Application::build(configuration).await?;
+    app.run_until_stopped().await?;
     Ok(())
 }

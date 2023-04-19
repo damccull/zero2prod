@@ -43,21 +43,21 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
     settings
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
     pub email_client: EmailClientSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
@@ -95,7 +95,7 @@ impl DatabaseSettings {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct EmailClientSettings {
     pub authorization_token: Secret<String>,
     pub base_url: String,
