@@ -5,11 +5,11 @@ use chrono::Utc;
 use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool};
 
-use crate::{domain::NewSubscriber, email_client::EmailClient};
+use crate::{domain::NewSubscriber, email_client::EmailClient, startup::ApplicationBaseUrl};
 
 #[tracing::instrument(
     name="[Adding a new subscriber]",
-    skip(db, email_client, form),
+    skip(db, email_client, base_url, form),
     fields(
         subscriber_email=%form.email,
         subscriber_name=%form.name
@@ -18,6 +18,7 @@ use crate::{domain::NewSubscriber, email_client::EmailClient};
 pub async fn subscribe(
     State(db): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
+    State(base_url): State<ApplicationBaseUrl>,
     Form(form): Form<FormData>,
 ) -> impl IntoResponse {
     tracing::info!(
@@ -37,7 +38,7 @@ pub async fn subscribe(
     if insert_subscriber(&db, &new_subscriber).await.is_err() {
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
-    if send_confirmation_email(email_client, new_subscriber)
+    if send_confirmation_email(email_client, new_subscriber, &base_url.0)
         .await
         .is_err()
     {
@@ -48,13 +49,15 @@ pub async fn subscribe(
 
 #[tracing::instrument(
     name="Send confirmation email"
-    skip(email_client, new_subscriber)
+    skip(email_client, new_subscriber, base_url)
 )]
 async fn send_confirmation_email(
     email_client: Arc<EmailClient>,
     new_subscriber: NewSubscriber,
+    base_url: &str,
 ) -> Result<(), reqwest::Error> {
-    let confirmation_link = "https://there-is-no-such-domain.com/subscriptions/confirm";
+    // Build a confirmation link with a dynamic root
+    let confirmation_link = format!("{}/subscriptions/confirm?subscription_token=mytoken", base_url);
     let html_body = format!(
         "Welcome to our newsletter!<br />\
                 Click <a href=\"{}\">here</a> to confirm your subscription.",
