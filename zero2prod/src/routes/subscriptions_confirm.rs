@@ -9,5 +9,5 @@ pub async fn confirm(_parameters: Query<ConfirmParameters>) -> impl IntoResponse
 
 #[derive(Debug, Deserialize)]
 pub struct ConfirmParameters {
-    _subscription_token: String,
+    subscription_token: String,
 }
