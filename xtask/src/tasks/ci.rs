@@ -46,7 +46,7 @@ pub fn ci() -> Result<(), DynError> {
     print_error_with_status_code("cargo check", check);
     print_error_with_status_code("cargo clippy", clippy);
     print_error_with_status_code("cargo build", build);
-    print_error_with_status_code("cargo test", test);
+    print_error_with_status_code("tests", test);
     print_error_with_status_code("cargo audit", audit);
     print_error_with_status_code("cargo fmt", fmt);
     print_error_with_status_code("cargo sqlx prepare", sqlx_prep);
