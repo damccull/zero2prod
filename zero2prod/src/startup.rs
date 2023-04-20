@@ -52,7 +52,12 @@ impl Application {
             e
         })?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, db_pool, email_client);
+        let server = run(
+            listener,
+            db_pool,
+            email_client,
+            configuration.application.base_url,
+        );
         Ok(Self { port, server })
     }
 
@@ -72,11 +77,17 @@ pub fn get_db_pool(configuration: &DatabaseSettings) -> PgPool {
         .connect_lazy_with(configuration.with_db())
 }
 
-pub fn run(listener: TcpListener, db_pool: PgPool, email_client: EmailClient) -> AppServer {
+pub fn run(
+    listener: TcpListener,
+    db_pool: PgPool,
+    email_client: EmailClient,
+    base_url: String,
+) -> AppServer {
     // Build app state
     let app_state = AppState {
         db_pool,
         email_client: Arc::new(email_client),
+        base_url: ApplicationBaseUrl(base_url),
     };
 
     // Create a router that will contain and match all routes for the application
@@ -97,6 +108,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool, email_client: EmailClient) ->
 struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
+    base_url: ApplicationBaseUrl,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -110,3 +122,12 @@ impl FromRef<AppState> for Arc<EmailClient> {
         app_state.email_client.clone()
     }
 }
+
+impl FromRef<AppState> for ApplicationBaseUrl {
+    fn from_ref(app_state: &AppState) -> Self {
+        app_state.base_url.clone()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ApplicationBaseUrl(pub String);
