@@ -46,7 +46,10 @@ async fn the_link_returned_by_subscribe_returns_200_if_called() {
         links[0].as_str().to_owned()
     };
     let raw_confirmation_link = &get_link(body["HtmlBody"].as_str().unwrap());
-    let confirmation_link = Url::parse(raw_confirmation_link).unwrap();
+    let mut confirmation_link = Url::parse(raw_confirmation_link).unwrap();
+    // Rewrite URL to include the port
+    confirmation_link.set_port(Some(app.port)).unwrap();
+
     // Make sure we don't call random APIs on the web
     assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
 

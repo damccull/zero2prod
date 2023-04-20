@@ -46,11 +46,13 @@ pub async fn spawn_app() -> TestApp {
     let app = Application::build(configuration.clone())
         .await
         .expect("Failed to build application");
+    let port = app.port();
     let address = format!("http://127.0.0.1:{}", app.port());
     tokio::spawn(app.run_until_stopped());
 
     TestApp {
         address,
+        port,
         db_pool: get_db_pool(&configuration.database),
         email_server,
     }
@@ -82,6 +84,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
 
 pub struct TestApp {
     pub address: String,
+    pub port: u16,
     pub db_pool: PgPool,
     pub email_server: MockServer,
 }
