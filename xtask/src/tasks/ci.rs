@@ -1,35 +1,41 @@
 use colored::Colorize;
 use std::process::{Command, ExitStatus};
 
-use crate::{project_root, DynError};
+use crate::{project_root, tasks::test::run_test, DynError};
 
 pub fn ci() -> Result<(), DynError> {
     println!("Running `cargo check`...");
     let check = Command::new("cargo")
+        .current_dir(project_root())
         .args(["check", "-p", "zero2prod"])
         .status()?;
 
     println!("Running `cargo clippy`...");
     let clippy = Command::new("cargo")
+        .current_dir(project_root())
         .args(["clippy", "-p", "zero2prod"])
         .status()?;
 
     println!("Running `cargo build`...");
     let build = Command::new("cargo")
+        .current_dir(project_root())
         .args(["build", "-p", "zero2prod"])
         .status()?;
 
-    //TODO: Check if nextest is installed and run it instead of test
-    println!("Running `cargo test`...");
-    let test = Command::new("cargo")
-        .args(["test", "-p", "zero2prod"])
-        .status()?;
+    println!("Running tests...");
+    let test = run_test()?;
 
     println!("Running `cargo audit`...");
-    let audit = Command::new("cargo").args(["audit"]).status()?;
+    let audit = Command::new("cargo")
+        .current_dir(project_root())
+        .args(["audit"])
+        .status()?;
 
     println!("Running `cargo fmt`...");
-    let fmt = Command::new("cargo").args(["fmt"]).status()?;
+    let fmt = Command::new("cargo")
+        .current_dir(project_root())
+        .args(["fmt"])
+        .status()?;
 
     println!("Running `cargo sqlx prepare --check -- --lib`...");
     let sqlx_prep = Command::new("cargo")

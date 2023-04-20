@@ -5,6 +5,7 @@ use xtask::{
         ci::ci,
         database::{docker_db, migrate_db, sqlx_prepare},
         distribute::dist,
+        test::xtest,
     },
     DynError,
 };
@@ -19,11 +20,12 @@ fn main() {
 fn try_main() -> Result<(), DynError> {
     let task = env::args().nth(1);
     match task.as_deref() {
+        Some("ci") => ci()?,
+        Some("dist") => dist()?,
         Some("dockerdb") => docker_db()?,
         Some("migrate") => migrate_db()?,
         Some("sqlxprepare") => sqlx_prepare()?,
-        Some("dist") => dist()?,
-        Some("ci") => ci()?,
+        Some("test") => xtest()?,
         _ => print_help(),
     }
     Ok(())
@@ -35,6 +37,7 @@ fn print_help() {
 Usage: cargo xtask <task>
 
 Tasks:
+  test            runs tests on binary and xtask (uses nextest if installed)
   ci              runs all necessary checks to avoid CI errors when git pushed
   dist            builds application and man pages
   sqlxprepare     runs the correct sqlx prepare command

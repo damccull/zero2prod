@@ -22,6 +22,26 @@ pub fn dist_dir() -> PathBuf {
     project_root().join("target/dist")
 }
 
+pub fn check_nextest_exists() -> Result<(), DynError> {
+    let status = Command::new("cargo")
+        .args(["nextest"])
+        .current_dir(project_root())
+        .args(["--version"])
+        .status();
+
+    match status {
+        Ok(s) => {
+            let s = s.code().expect("Couldn't get exit code");
+            if s == 101 {
+                return Err("Error: 'cargo-nextest' is not available.".into());
+            }
+        }
+        Err(e) => return Err(format!("An unknown error occurred: {}", e).into()),
+    };
+
+    Ok(())
+}
+
 pub fn check_psql_exists() -> Result<(), DynError> {
     let status = Command::new("psql")
         .current_dir(project_root())
