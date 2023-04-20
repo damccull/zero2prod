@@ -57,7 +57,10 @@ async fn send_confirmation_email(
     base_url: &str,
 ) -> Result<(), reqwest::Error> {
     // Build a confirmation link with a dynamic root
-    let confirmation_link = format!("{}/subscriptions/confirm?subscription_token=mytoken", base_url);
+    let confirmation_link = format!(
+        "{}/subscriptions/confirm?subscription_token=mytoken",
+        base_url
+    );
     let html_body = format!(
         "Welcome to our newsletter!<br />\
                 Click <a href=\"{}\">here</a> to confirm your subscription.",
