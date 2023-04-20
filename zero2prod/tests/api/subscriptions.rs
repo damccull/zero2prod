@@ -5,18 +5,6 @@ use wiremock::{
 
 use crate::helpers::{spawn_app, TestApp};
 
-impl TestApp {
-    async fn post_subscriptions(&self, body: String) -> reqwest::Response {
-        reqwest::Client::new()
-            .post(&format!("{}/subscriptions", &self.address))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(body)
-            .send()
-            .await
-            .expect("failed to execute request")
-    }
-}
-
 #[tokio::test]
 async fn subscribe_returns_200_for_valid_form_data() {
     // Arrange
