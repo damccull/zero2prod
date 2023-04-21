@@ -87,7 +87,7 @@ pub async fn store_token(
     transaction: &mut Transaction<'_, Postgres>,
     subscriber_id: Uuid,
     subscription_token: &str,
-) -> Result<(), sqlx::Error> {
+) -> Result<(), StoreTokenError> {
     sqlx::query!(
         r#"INSERT INTO subscription_tokens (subscription_token, subscriber_id) VALUES ($1, $2)"#,
         subscription_token,
@@ -96,8 +96,9 @@ pub async fn store_token(
     .execute(transaction)
     .await
     .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
+        // tracing::error!("Failed to execute query: {:?}", e);
+        // e
+        StoreTokenError(e)
     })?;
     Ok(())
 }
@@ -178,4 +179,17 @@ fn generate_subscription_token() -> String {
 pub struct FormData {
     pub email: String,
     pub name: String,
+}
+
+#[derive(Debug)]
+pub struct StoreTokenError(sqlx::Error);
+
+impl std::fmt::Display for StoreTokenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "A database error was encountered while \
+             trying to store a subscription token."
+        )
+    }
 }
