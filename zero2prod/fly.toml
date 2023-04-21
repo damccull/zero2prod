@@ -7,12 +7,14 @@ primary_region = "lax"
 processes = []
 
 [env]
+  APP_APPLICATION__BASE_URL = "https://dzero2prod.fly.dev"
   APP_DATABASE__USERNAME = "newsletter"
   APP_DATABASE__PASSWORD = "Do not put password here. Put it in a 'fly secret'."
   APP_DATABASE__HOST = "damccull-postgres.flycast"
   APP_DATABASE__PORT = "5432"
   APP_DATABASE__DATABASE_NAME = "newsletter"
   APP_DATABASE__REQUIRE_SSL = "false"
+  APP_EMAIL_CLIENT__SENDER_EMAIL = "zero2prod@digitalmccullough.com"
 
 [experimental]
   auto_rollback = true
