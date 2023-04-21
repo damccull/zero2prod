@@ -6,6 +6,12 @@ on:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+
+env:
+  CARGO_TERM_COLOR: always
+  SQLX_VERSION: 0.6.3
+  SQLX_FEATURES: "rustls,postgres"
+
 jobs:
   coverage:
     name: Code coverage
