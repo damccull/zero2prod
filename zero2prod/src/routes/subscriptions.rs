@@ -60,6 +60,7 @@ pub async fn subscribe(
     .await
     .is_err()
     {
+        tracing::error!("Failed to send email");
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
     StatusCode::OK

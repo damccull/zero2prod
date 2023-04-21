@@ -4,6 +4,7 @@ use serde::Serialize;
 
 use crate::domain::SubscriberEmail;
 
+#[derive(Debug)]
 pub struct EmailClient {
     authorization_token: Secret<String>,
     base_url: String,

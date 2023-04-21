@@ -2,7 +2,7 @@ use crate::routes::FormData;
 
 use super::{subscriber_email::SubscriberEmail, SubscriberName};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NewSubscriber {
     pub email: SubscriberEmail,
     pub name: SubscriberName,
