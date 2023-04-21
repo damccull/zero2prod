@@ -21,7 +21,7 @@ pub async fn subscribe(
     State(email_client): State<Arc<EmailClient>>,
     State(base_url): State<ApplicationBaseUrl>,
     Form(form): Form<FormData>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, SubscribeError> {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
         form.email,
@@ -32,7 +32,9 @@ pub async fn subscribe(
         Ok(transaction) => transaction,
         Err(e) => {
             tracing::error!("Failed to get a database transaction: {:?}", e);
-            return StatusCode::INTERNAL_SERVER_ERROR;
+            return Err(SubscribeError::StatusCode(
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ));
         }
     };
 
@@ -40,28 +42,30 @@ pub async fn subscribe(
         Ok(subscriber) => subscriber,
         Err(e) => {
             tracing::error!("failed to parse subscriber: {:?}", e);
-            return StatusCode::UNPROCESSABLE_ENTITY;
+            return Err(SubscribeError::StatusCode(StatusCode::UNPROCESSABLE_ENTITY));
         }
     };
 
     let subscriber_id = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
         Err(_) => {
-            return StatusCode::INTERNAL_SERVER_ERROR;
+            return Err(SubscribeError::StatusCode(
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ));
         }
     };
 
     let subscription_token = generate_subscription_token();
-    if store_token(&mut transaction, subscriber_id, &subscription_token)
-        .await
-        .is_err()
-    {
-        return StatusCode::INTERNAL_SERVER_ERROR;
+
+    if let Err(e) = store_token(&mut transaction, subscriber_id, &subscription_token).await {
+        return Err(SubscribeError::StoreTokenError(e));
     }
 
     if transaction.commit().await.is_err() {
         tracing::error!("Failed to commit transaction");
-        return StatusCode::INTERNAL_SERVER_ERROR;
+        return Err(SubscribeError::StatusCode(
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ));
     }
 
     if send_confirmation_email(
@@ -74,9 +78,11 @@ pub async fn subscribe(
     .is_err()
     {
         tracing::error!("Failed to send email");
-        return StatusCode::INTERNAL_SERVER_ERROR;
+        return Err(SubscribeError::StatusCode(
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ));
     }
-    StatusCode::OK
+    Ok(StatusCode::OK)
 }
 
 #[tracing::instrument(
@@ -87,19 +93,14 @@ pub async fn store_token(
     transaction: &mut Transaction<'_, Postgres>,
     subscriber_id: Uuid,
     subscription_token: &str,
-) -> Result<(), StoreTokenError> {
+) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"INSERT INTO subscription_tokens (subscription_token, subscriber_id) VALUES ($1, $2)"#,
         subscription_token,
         subscriber_id
     )
     .execute(transaction)
-    .await
-    .map_err(|e| {
-        // tracing::error!("Failed to execute query: {:?}", e);
-        // e
-        StoreTokenError(e)
-    })?;
+    .await?;
     Ok(())
 }
 
@@ -182,14 +183,33 @@ pub struct FormData {
 }
 
 #[derive(Debug)]
-pub struct StoreTokenError(sqlx::Error);
+pub enum SubscribeError {
+    StatusCode(StatusCode),
+    StoreTokenError(sqlx::Error),
+}
 
-impl std::fmt::Display for StoreTokenError {
+impl std::fmt::Display for SubscribeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "A database error was encountered while \
-             trying to store a subscription token."
-        )
+        match self {
+            SubscribeError::StoreTokenError(e) => write!(
+                f,
+                "A database error was encountered while \
+                trying to store a subscription token: {}",
+                e
+            ),
+            SubscribeError::StatusCode(c) => write!(f, "{}", c),
+        }
+    }
+}
+
+impl IntoResponse for SubscribeError {
+    fn into_response(self) -> axum::response::Response {
+        tracing::error!("{}", self.to_string());
+        match self {
+            SubscribeError::StatusCode(c) => c.into_response(),
+            SubscribeError::StoreTokenError(_) => {
+                (StatusCode::INTERNAL_SERVER_ERROR).into_response()
+            }
+        }
     }
 }
