@@ -6,12 +6,17 @@ use axum::{
     response::{IntoResponse, Result},
     Form,
 };
+use axum_macros::debug_handler;
 use chrono::Utc;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::Deserialize;
 use sqlx::{types::Uuid, PgPool, Postgres, Transaction};
 
-use crate::{domain::NewSubscriber, email_client::EmailClient, startup::ApplicationBaseUrl};
+use crate::{
+    domain::NewSubscriber,
+    email_client::EmailClient,
+    startup::{AppState, ApplicationBaseUrl},
+};
 
 #[tracing::instrument(
     name="[Adding a new subscriber]",
@@ -21,6 +26,7 @@ use crate::{domain::NewSubscriber, email_client::EmailClient, startup::Applicati
         subscriber_name=%form.name
     )
 )]
+#[cfg_attr(any(test, debug_assertions), debug_handler(state = AppState ))]
 pub async fn subscribe(
     State(db): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
