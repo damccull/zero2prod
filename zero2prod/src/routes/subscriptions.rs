@@ -43,7 +43,7 @@ pub async fn subscribe(
         Ok(transaction) => transaction,
         Err(e) => {
             tracing::error!("Failed to get a database transaction: {:?}", e);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
         }
     };
 
@@ -51,26 +51,26 @@ pub async fn subscribe(
         Ok(subscriber) => subscriber,
         Err(e) => {
             tracing::error!("failed to parse subscriber: {:?}", e);
-            return Err(StatusCode::UNPROCESSABLE_ENTITY);
+            return Err(StatusCode::UNPROCESSABLE_ENTITY.into());
         }
     };
 
     let subscriber_id = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
         Err(_) => {
-            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
         }
     };
 
     let subscription_token = generate_subscription_token();
 
     if let Err(e) = store_token(&mut transaction, subscriber_id, &subscription_token).await {
-        return Err(StoreTokenError(e));
+        return Err(StoreTokenError(e).into_response().into());
     }
 
     if transaction.commit().await.is_err() {
         tracing::error!("Failed to commit transaction");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
     }
 
     if send_confirmation_email(
@@ -83,9 +83,7 @@ pub async fn subscribe(
     .is_err()
     {
         tracing::error!("Failed to send email");
-        return Err(SubscribeError::StatusCode(
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
     }
     Ok(StatusCode::OK)
 }
@@ -257,5 +255,11 @@ impl std::fmt::Debug for StoreTokenError {
 impl std::error::Error for StoreTokenError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(&self.0)
+    }
+}
+
+impl IntoResponse for StoreTokenError {
+    fn into_response(self) -> axum::response::Response {
+        StatusCode::INTERNAL_SERVER_ERROR.into_response()
     }
 }
