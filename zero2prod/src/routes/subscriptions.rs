@@ -1,6 +1,11 @@
-use std::sync::Arc;
+use std::{fmt::Display, sync::Arc};
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Form};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Result},
+    Form,
+};
 use chrono::Utc;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::Deserialize;
@@ -21,7 +26,7 @@ pub async fn subscribe(
     State(email_client): State<Arc<EmailClient>>,
     State(base_url): State<ApplicationBaseUrl>,
     Form(form): Form<FormData>,
-) -> Result<impl IntoResponse, SubscribeError> {
+) -> Result<impl IntoResponse> {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
         form.email,
@@ -32,9 +37,7 @@ pub async fn subscribe(
         Ok(transaction) => transaction,
         Err(e) => {
             tracing::error!("Failed to get a database transaction: {:?}", e);
-            return Err(SubscribeError::StatusCode(
-                StatusCode::INTERNAL_SERVER_ERROR,
-            ));
+            return Err(StatusCode::INTERNAL_SERVER_ERROR.into_response());
         }
     };
 
@@ -42,30 +45,26 @@ pub async fn subscribe(
         Ok(subscriber) => subscriber,
         Err(e) => {
             tracing::error!("failed to parse subscriber: {:?}", e);
-            return Err(SubscribeError::StatusCode(StatusCode::UNPROCESSABLE_ENTITY));
+            return Err(StatusCode::UNPROCESSABLE_ENTITY);
         }
     };
 
     let subscriber_id = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
         Err(_) => {
-            return Err(SubscribeError::StatusCode(
-                StatusCode::INTERNAL_SERVER_ERROR,
-            ));
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
     };
 
     let subscription_token = generate_subscription_token();
 
     if let Err(e) = store_token(&mut transaction, subscriber_id, &subscription_token).await {
-        return Err(SubscribeError::StoreTokenError(e));
+        return Err(StoreTokenError(e));
     }
 
     if transaction.commit().await.is_err() {
         tracing::error!("Failed to commit transaction");
-        return Err(SubscribeError::StatusCode(
-            StatusCode::INTERNAL_SERVER_ERROR,
-        ));
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     if send_confirmation_email(
@@ -182,10 +181,18 @@ pub struct FormData {
     pub name: String,
 }
 
-#[derive(Debug)]
 pub enum SubscribeError {
     StatusCode(StatusCode),
     StoreTokenError(sqlx::Error),
+}
+
+impl std::fmt::Debug for SubscribeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::StatusCode(arg0) => f.debug_tuple("StatusCode").field(arg0).finish(),
+            Self::StoreTokenError(arg0) => f.debug_tuple("StoreTokenError").field(arg0).finish(),
+        }
+    }
 }
 
 impl std::fmt::Display for SubscribeError {
@@ -211,5 +218,38 @@ impl IntoResponse for SubscribeError {
                 (StatusCode::INTERNAL_SERVER_ERROR).into_response()
             }
         }
+    }
+}
+
+impl std::error::Error for SubscribeError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            SubscribeError::StatusCode(_) => None,
+            SubscribeError::StoreTokenError(e) => Some(e),
+        }
+    }
+}
+
+pub struct StoreTokenError(sqlx::Error);
+
+impl Display for StoreTokenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "A database error was encountered while \
+            trying to store a subscription token."
+        )
+    }
+}
+
+impl std::fmt::Debug for StoreTokenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}\nCaused by:\n\t{}", self, self.0)
+    }
+}
+
+impl std::error::Error for StoreTokenError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
     }
 }
