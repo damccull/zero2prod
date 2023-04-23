@@ -105,7 +105,7 @@ pub fn run(
 }
 
 #[derive(Clone)]
-struct AppState {
+pub struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
