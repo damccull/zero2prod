@@ -11,6 +11,7 @@ path = "src/main.rs"
 name = "zero2prod"
 
 [dependencies]
+anyhow = "1.0.70"
 axum = "0.6.15"
 axum-macros = "0.3.7"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }

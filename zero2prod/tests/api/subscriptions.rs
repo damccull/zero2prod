@@ -147,7 +147,7 @@ async fn subscribe_fails_if_there_is_a_fatal_database_error() {
     let app = spawn_app().await;
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     // Sabotage the database on purose
-    sqlx::query!("ALTER TABLE subscription_tokens DROP column subscription_token;",)
+    sqlx::query!("ALTER TABLE subscriptions DROP column email;",)
         .execute(&app.db_pool)
         .await
         .unwrap();
