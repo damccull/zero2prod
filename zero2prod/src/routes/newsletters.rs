@@ -1,7 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::{extract::State, response::IntoResponse, Json};
+use axum::{
+    extract::{rejection::JsonRejection, State},
+    response::IntoResponse,
+    Json,
+};
 use axum_macros::debug_handler;
 use http::StatusCode;
 use sqlx::PgPool;
@@ -13,8 +17,12 @@ use crate::{domain::SubscriberEmail, email_client::EmailClient, error_chain_fmt}
 pub async fn publish_newsletter(
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
-    Json(body): Json<BodyData>,
+    body: Result<Json<BodyData>, JsonRejection>,
 ) -> Result<impl IntoResponse, PublishError> {
+    let body = match body {
+        Ok(Json(payload)) => payload,
+        Err(e) => return Err(PublishError::UnexpectedError(anyhow::anyhow!(e))),
+    };
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
         match subscriber {
@@ -97,6 +105,7 @@ impl std::fmt::Debug for PublishError {
 
 impl IntoResponse for PublishError {
     fn into_response(self) -> axum::response::Response {
+        tracing::error!("{:?}", self);
         match self {
             PublishError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
