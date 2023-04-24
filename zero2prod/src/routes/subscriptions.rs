@@ -16,6 +16,7 @@ use crate::{
     domain::NewSubscriber,
     email_client::EmailClient,
     startup::{AppState, ApplicationBaseUrl},
+    telemetry::MyErrorResponse,
 };
 
 #[tracing::instrument(
@@ -32,7 +33,7 @@ pub async fn subscribe(
     State(email_client): State<Arc<EmailClient>>,
     State(base_url): State<ApplicationBaseUrl>,
     Form(form): Form<FormData>,
-) -> Result<impl IntoResponse> {
+) -> Result<impl IntoResponse, MyErrorResponse> {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
         form.email,
@@ -43,7 +44,10 @@ pub async fn subscribe(
         Ok(transaction) => transaction,
         Err(e) => {
             tracing::error!("Failed to get a database transaction: {:?}", e);
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
+            return Err(MyErrorResponse::new_from_error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                e,
+            ));
         }
     };
 
@@ -51,26 +55,32 @@ pub async fn subscribe(
         Ok(subscriber) => subscriber,
         Err(e) => {
             tracing::error!("failed to parse subscriber: {:?}", e);
-            return Err(StatusCode::UNPROCESSABLE_ENTITY.into());
+            return Err(MyErrorResponse::new(StatusCode::UNPROCESSABLE_ENTITY));
         }
     };
 
     let subscriber_id = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
-        Err(_) => {
-            return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
+        Err(e) => {
+            return Err(MyErrorResponse::new_from_error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                e,
+            ));
         }
     };
 
     let subscription_token = generate_subscription_token();
 
     if let Err(e) = store_token(&mut transaction, subscriber_id, &subscription_token).await {
-        return Err(StoreTokenError(e).into_response().into());
+        return Err(MyErrorResponse::new_from_error(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            StoreTokenError(e),
+        ));
     }
 
     if transaction.commit().await.is_err() {
         tracing::error!("Failed to commit transaction");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
+        return Err(MyErrorResponse::new(StatusCode::INTERNAL_SERVER_ERROR));
     }
 
     if send_confirmation_email(
@@ -83,7 +93,7 @@ pub async fn subscribe(
     .is_err()
     {
         tracing::error!("Failed to send email");
-        return Err(StatusCode::INTERNAL_SERVER_ERROR.into());
+        return Err(MyErrorResponse::new(StatusCode::INTERNAL_SERVER_ERROR));
     }
     Ok(StatusCode::OK)
 }
@@ -255,11 +265,5 @@ impl std::fmt::Debug for StoreTokenError {
 impl std::error::Error for StoreTokenError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(&self.0)
-    }
-}
-
-impl IntoResponse for StoreTokenError {
-    fn into_response(self) -> axum::response::Response {
-        StatusCode::INTERNAL_SERVER_ERROR.into_response()
     }
 }
