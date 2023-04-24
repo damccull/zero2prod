@@ -65,7 +65,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 }
 
 #[tokio::test]
-async fn newsletters_return_422_for_invalid_data() {
+async fn newsletters_returns_422_for_invalid_data() {
     // Arrange
     let app = spawn_app().await;
     let test_cases = vec![
