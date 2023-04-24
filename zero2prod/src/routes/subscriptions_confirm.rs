@@ -1,3 +1,4 @@
+use anyhow::Context;
 use axum::{
     extract::{Query, State},
     response::IntoResponse,
@@ -11,21 +12,18 @@ use uuid::Uuid;
 pub async fn confirm(
     State(db_pool): State<PgPool>,
     parameters: Query<ConfirmParameters>,
-) -> impl IntoResponse {
-    let id = match get_subscriber_id_from_token(&db_pool, &parameters.subscription_token).await {
-        Ok(id) => id,
-        Err(_) => {
-            return StatusCode::INTERNAL_SERVER_ERROR;
-        }
-    };
+) -> Result<impl IntoResponse, ConfirmError> {
+    let id = get_subscriber_id_from_token(&db_pool, &parameters.subscription_token)
+        .await
+        .context("Failed to get subscriber id from token.")?;
 
     match id {
-        None => StatusCode::UNAUTHORIZED,
+        None => Ok(StatusCode::UNAUTHORIZED),
         Some(subscriber_id) => {
-            if confirm_subscriber(&db_pool, subscriber_id).await.is_err() {
-                return StatusCode::INTERNAL_SERVER_ERROR;
-            }
-            StatusCode::OK
+            confirm_subscriber(&db_pool, subscriber_id)
+                .await
+                .context("Failed to set subscriber to 'confirmed' status.")?;
+            Ok(StatusCode::OK)
         }
     }
 }
@@ -37,11 +35,7 @@ pub async fn confirm_subscriber(db_pool: &PgPool, subscriber_id: Uuid) -> Result
         subscriber_id
     )
     .execute(db_pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
     Ok(())
 }
 
@@ -59,15 +53,33 @@ pub async fn get_subscriber_id_from_token(
         subscription_token
     )
     .fetch_optional(db_pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
     Ok(result.map(|r| r.subscriber_id))
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ConfirmParameters {
     subscription_token: String,
+}
+
+#[derive(thiserror::Error)]
+pub enum ConfirmError {
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+}
+
+impl std::fmt::Debug for ConfirmError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        crate::error_chain_fmt(self, f)
+    }
+}
+
+impl IntoResponse for ConfirmError {
+    fn into_response(self) -> axum::response::Response {
+        tracing::error!("{:?}", self);
+        match self {
+            ConfirmError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+        .into_response()
+    }
 }
