@@ -124,7 +124,7 @@ where
 impl IntoResponse for MyErrorResponse {
     fn into_response(self) -> Response {
         match &self.source {
-            Some(e) => tracing::error!("Caused by:\n\t{:?}", e),
+            Some(e) => tracing::error!("{:?}", e),
             None => tracing::error!("No source error attached. Cause unknown."),
         }
         self.status_code.into_response()
