@@ -1,5 +1,6 @@
-use colored::Colorize;
 use std::process::{Command, ExitStatus};
+
+use owo_colors::OwoColorize;
 
 use crate::{project_root, tasks::test::run_test, DynError};
 
