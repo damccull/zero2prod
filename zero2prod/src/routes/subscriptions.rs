@@ -44,38 +44,29 @@ pub async fn subscribe(
         Ok(transaction) => transaction,
         Err(e) => {
             tracing::error!("Failed to get a database transaction: {:?}", e);
-            return Err(MyErrorResponse::new_from_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                e,
-            ));
+            return Err(e.into());
         }
     };
 
     let new_subscriber = match form.try_into() {
         Ok(subscriber) => subscriber,
         Err(e) => {
-            tracing::error!("failed to parse subscriber: {:?}", e);
-            return Err(MyErrorResponse::new(StatusCode::UNPROCESSABLE_ENTITY));
+            let x = axum::Error::new(e);
+            return Err(MyErrorResponse::from(x).status_code(StatusCode::UNPROCESSABLE_ENTITY));
         }
     };
 
     let subscriber_id = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
         Err(e) => {
-            return Err(MyErrorResponse::new_from_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                e,
-            ));
+            return Err(e.into());
         }
     };
 
     let subscription_token = generate_subscription_token();
 
     if let Err(e) = store_token(&mut transaction, subscriber_id, &subscription_token).await {
-        return Err(MyErrorResponse::new_from_error(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            StoreTokenError(e),
-        ));
+        return Err(StoreTokenError(e).into());
     }
 
     if transaction.commit().await.is_err() {

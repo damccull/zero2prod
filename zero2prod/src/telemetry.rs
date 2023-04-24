@@ -87,18 +87,35 @@ pub struct MyErrorResponse {
 }
 
 impl MyErrorResponse {
+    /// Creates a new [`MyErrorResponse`] with the specified [`StatusCode`] and the
+    /// error source set to None.
     pub fn new(status_code: StatusCode) -> Self {
         Self {
             status_code,
             source: None,
         }
     }
-    pub fn new_from_error<T: std::error::Error + 'static>(
-        status_code: StatusCode,
-        error: T,
-    ) -> Self {
+
+    /// Sets the source to the [`Error`](std::error::Error) supplied.
+    pub fn source(mut self, source: &'static (dyn std::error::Error + 'static)) -> Self {
+        self.source = Some(Box::new(source));
+        self
+    }
+
+    /// Sets the status code to a valid [`StatusCode`]
+    pub fn status_code(mut self, status_code: StatusCode) -> Self {
+        self.status_code = status_code;
+        self
+    }
+}
+
+impl<T> From<T> for MyErrorResponse
+where
+    T: std::error::Error + 'static,
+{
+    fn from(error: T) -> Self {
         Self {
-            status_code,
+            status_code: StatusCode::INTERNAL_SERVER_ERROR,
             source: Some(Box::new(error)),
         }
     }
@@ -106,12 +123,10 @@ impl MyErrorResponse {
 
 impl IntoResponse for MyErrorResponse {
     fn into_response(self) -> Response {
+        match &self.source {
+            Some(e) => tracing::error!("Caused by:\n\t{:?}", e),
+            None => tracing::error!("No source error attached. Cause unknown."),
+        }
         self.status_code.into_response()
-    }
-}
-
-impl Drop for MyErrorResponse {
-    fn drop(&mut self) {
-        tracing::error!("Caused by:\n\t{:?}", self.source)
     }
 }
