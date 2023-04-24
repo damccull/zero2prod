@@ -1,4 +1,9 @@
-use axum::{body::HttpBody, Router};
+use axum::{
+    body::HttpBody,
+    response::{IntoResponse, Response},
+    Router,
+};
+use http::StatusCode;
 use tower::ServiceBuilder;
 use tower_http::{
     request_id::MakeRequestUuid,
@@ -72,5 +77,41 @@ where
                 )
                 .propagate_x_request_id(),
         )
+    }
+}
+
+#[derive(Debug)]
+pub struct MyErrorResponse {
+    status_code: StatusCode,
+    source: Option<Box<dyn std::error::Error>>,
+}
+
+impl MyErrorResponse {
+    pub fn new(status_code: StatusCode) -> Self {
+        Self {
+            status_code,
+            source: None,
+        }
+    }
+    pub fn new_from_error<T: std::error::Error + 'static>(
+        status_code: StatusCode,
+        error: T,
+    ) -> Self {
+        Self {
+            status_code,
+            source: Some(Box::new(error)),
+        }
+    }
+}
+
+impl IntoResponse for MyErrorResponse {
+    fn into_response(self) -> Response {
+        self.status_code.into_response()
+    }
+}
+
+impl Drop for MyErrorResponse {
+    fn drop(&mut self) {
+        tracing::error!("Caused by:\n\t{:?}", self.source)
     }
 }
