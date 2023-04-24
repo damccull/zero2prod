@@ -1,9 +1,4 @@
-use axum::{
-    body::HttpBody,
-    response::{IntoResponse, Response},
-    Router,
-};
-use http::StatusCode;
+use axum::{body::HttpBody, Router};
 use tower::ServiceBuilder;
 use tower_http::{
     request_id::MakeRequestUuid,
