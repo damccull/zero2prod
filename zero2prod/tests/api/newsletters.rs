@@ -99,6 +99,23 @@ async fn newsletters_returns_422_for_invalid_data() {
     }
 }
 
+#[tokio::test]
+/// This test is temporary while fixing an issue where
+/// a handler will not open a tracing span at all if json
+/// fails to deserialize as part of its invocation.
+async fn newsletters_logs_anything() {
+    let app = spawn_app().await;
+    let body = serde_json::json!({
+        "title":"Newsletter title",
+        "content": {
+            "html": "<p>Newsletter body as HTML</p>",
+        }
+    });
+    let response = app.post_newsletters(body).await;
+
+    assert_eq!(response.status().as_u16(), 200);
+}
+
 /// Use the public API of the applixation under test to create
 /// and unconfirmed subscriber.
 async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
