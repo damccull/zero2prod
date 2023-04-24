@@ -186,55 +186,6 @@ pub struct FormData {
     pub name: String,
 }
 
-pub enum SubscribeError {
-    StatusCode(StatusCode),
-    StoreTokenError(sqlx::Error),
-}
-
-impl std::fmt::Debug for SubscribeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::StatusCode(arg0) => f.debug_tuple("StatusCode").field(arg0).finish(),
-            Self::StoreTokenError(arg0) => f.debug_tuple("StoreTokenError").field(arg0).finish(),
-        }
-    }
-}
-
-impl std::fmt::Display for SubscribeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SubscribeError::StoreTokenError(e) => write!(
-                f,
-                "A database error was encountered while \
-                trying to store a subscription token: {}",
-                e
-            ),
-            SubscribeError::StatusCode(c) => write!(f, "{}", c),
-        }
-    }
-}
-
-impl IntoResponse for SubscribeError {
-    fn into_response(self) -> axum::response::Response {
-        tracing::error!("{}", self.to_string());
-        match self {
-            SubscribeError::StatusCode(c) => c.into_response(),
-            SubscribeError::StoreTokenError(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR).into_response()
-            }
-        }
-    }
-}
-
-impl std::error::Error for SubscribeError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            SubscribeError::StatusCode(_) => None,
-            SubscribeError::StoreTokenError(e) => Some(e),
-        }
-    }
-}
-
 pub struct StoreTokenError(sqlx::Error);
 
 impl Display for StoreTokenError {
