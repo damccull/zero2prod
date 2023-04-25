@@ -63,6 +63,27 @@
     },
     "query": "UPDATE subscriptions SET status = 'confirmed' WHERE id = $1"
   },
+  "df5e51c3cbb40ab0f1b52e123a54537961d7390f1edff007b9c12c23c8e3735f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\n        SELECT user_id\n        FROM users\n        WHERE username = $1 AND password = $2\n        "
+  },
   "f662f52204ac729545aafa231ee19008d7ca139a923e5f7a1e6fece3a4fa8884": {
     "describe": {
       "columns": [],
