@@ -11,7 +11,7 @@ pub fn coverage() -> Result<(), anyhow::Error> {
 pub fn run_coverage_test() -> Result<ExitStatus, anyhow::Error> {
     let test = if check_tarpaulin_exists().is_ok() {
         Command::new("cargo")
-            .current_dir(project_root())
+            .current_dir(project_root().join("zero2prod"))
             .args(["tarpaulin"])
             .status()?
     } else {
