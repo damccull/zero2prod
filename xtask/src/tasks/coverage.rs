@@ -12,7 +12,7 @@ pub fn run_coverage_test() -> Result<ExitStatus, anyhow::Error> {
     let test = if check_tarpaulin_exists().is_ok() {
         Command::new("cargo")
             .current_dir(project_root().join("zero2prod"))
-            .args(["tarpaulin"])
+            .args(["tarpaulin", "--color", "auto"])
             .status()?
     } else {
         anyhow::bail!("Unable to run test coverage analysis. cargo-tarpaulin is not available.");
