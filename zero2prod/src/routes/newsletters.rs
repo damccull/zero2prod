@@ -6,7 +6,7 @@ use axum_extra::extract::WithRejection;
 use axum_macros::debug_handler;
 use base64::Engine;
 use http::{HeaderMap, StatusCode};
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
 
 use crate::{domain::SubscriberEmail, email_client::EmailClient};
@@ -14,8 +14,12 @@ use crate::{domain::SubscriberEmail, email_client::EmailClient};
 use newsletter_errors::*;
 use newsletter_types::*;
 
-#[tracing::instrument(name = "Publish a newsletter", skip(db_pool, email_client, body))]
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
+#[tracing::instrument(
+    name = "Publish a newsletter",
+    skip(db_pool, email_client, headers, body),
+    fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
+)]
 pub async fn publish_newsletter(
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
@@ -23,7 +27,10 @@ pub async fn publish_newsletter(
     WithRejection(Json(body), _): WithRejection<Json<BodyData>, PublishError>,
 ) -> Result<impl IntoResponse, PublishError> {
     // Check if the user is authorized to use this endpoint
-    let _credentials = basic_authentication(headers).map_err(PublishError::AuthError)?;
+    let credentials = basic_authentication(headers).map_err(PublishError::AuthError)?;
+    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
+    let user_id = validate_credentials(credentials, &db_pool).await?;
+    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
 
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
@@ -50,6 +57,30 @@ pub async fn publish_newsletter(
         }
     }
     Ok(StatusCode::OK)
+}
+
+async fn validate_credentials(
+    credentials: Credentials,
+    pool: &PgPool,
+) -> Result<uuid::Uuid, PublishError> {
+    let user_id: Option<_> = sqlx::query!(
+        r#"
+        SELECT user_id
+        FROM users
+        WHERE username = $1 AND password = $2
+        "#,
+        credentials.username,
+        credentials.password.expose_secret()
+    )
+    .fetch_optional(pool)
+    .await
+    .context("Failed to perform a query to validate auth credentials.")
+    .map_err(PublishError::UnexpectedError)?;
+
+    user_id
+        .map(|row| row.user_id)
+        .ok_or_else(|| anyhow::anyhow!("Invalid username or password."))
+        .map_err(PublishError::AuthError)
 }
 
 fn basic_authentication(headers: HeaderMap) -> Result<Credentials, anyhow::Error> {
@@ -84,8 +115,8 @@ fn basic_authentication(headers: HeaderMap) -> Result<Credentials, anyhow::Error
         .to_string();
 
     Ok(Credentials {
-        _username: username,
-        _password: Secret::new(password),
+        username,
+        password: Secret::new(password),
     })
 }
 
@@ -137,8 +168,8 @@ mod newsletter_types {
 
     #[derive(Debug)]
     pub(crate) struct Credentials {
-        pub(crate) _username: String,
-        pub(crate) _password: Secret<String>,
+        pub(crate) username: String,
+        pub(crate) password: Secret<String>,
     }
 }
 
