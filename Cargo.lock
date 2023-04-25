@@ -2693,6 +2693,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-macros",
+ "base64 0.21.0",
  "chrono",
  "claims",
  "config",
