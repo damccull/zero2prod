@@ -1,17 +1,16 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::{
-    extract::{rejection::JsonRejection, State},
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, response::IntoResponse, Json};
 use axum_extra::extract::WithRejection;
 use axum_macros::debug_handler;
 use http::StatusCode;
 use sqlx::PgPool;
 
-use crate::{domain::SubscriberEmail, email_client::EmailClient, error_chain_fmt};
+use crate::{domain::SubscriberEmail, email_client::EmailClient};
+
+use newsletter_errors::*;
+use newsletter_types::*;
 
 #[tracing::instrument(name = "Publish a newsletter", skip(db_pool, email_client, body))]
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
@@ -72,21 +71,39 @@ async fn get_confirmed_subscribers(
     Ok(confirmed_subscribers)
 }
 
-struct ConfirmedSubscriber {
-    email: SubscriberEmail,
+mod newsletter_types {
+    use secrecy::Secret;
+
+    use crate::domain::SubscriberEmail;
+
+    pub(crate) struct ConfirmedSubscriber {
+        pub(crate) email: SubscriberEmail,
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct BodyData {
-    title: String,
-    content: Content,
+        pub title: String,
+        pub content: Content,
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Content {
-    html: String,
-    text: String,
+        pub html: String,
+        pub text: String,
 }
+
+    #[derive(Debug)]
+    pub(crate) struct Credentials {
+        pub(crate) username: String,
+        pub(crate) password: Secret<String>,
+    }
+}
+
+mod newsletter_errors {
+    use axum::{extract::rejection::JsonRejection, response::IntoResponse};
+    use http::StatusCode;
+
+    use crate::error_chain_fmt;
 
 #[derive(thiserror::Error)]
 pub enum PublishError {
@@ -110,5 +127,6 @@ impl IntoResponse for PublishError {
             PublishError::JsonExtractionError(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
         .into_response()
+        }
     }
 }
