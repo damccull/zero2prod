@@ -2,9 +2,9 @@ use std::process::{Command, ExitStatus};
 
 use owo_colors::OwoColorize;
 
-use crate::{project_root, tasks::test::run_test, DynError};
+use crate::{project_root, tasks::test::run_test};
 
-pub fn ci() -> Result<(), DynError> {
+pub fn ci() -> Result<(), anyhow::Error> {
     println!("Running `cargo check`...");
     let check = Command::new("cargo")
         .current_dir(project_root())
@@ -52,6 +52,10 @@ pub fn ci() -> Result<(), DynError> {
     print_error_with_status_code("cargo fmt", fmt);
     print_error_with_status_code("cargo sqlx prepare", sqlx_prep);
 
+    println!(
+        "CI checks complete. Consider running `cargo xtask coverage`.\
+    Coverage checks are not completed by the CI checks due to the time requirement."
+    );
     Ok(())
 }
 

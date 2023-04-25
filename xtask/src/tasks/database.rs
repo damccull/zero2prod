@@ -1,8 +1,8 @@
 use std::{env, process::Command, thread, time::Duration};
 
-use crate::{check_psql_exists, check_sqlx_exists, project_root, DbConfig, DynError};
+use crate::{check_psql_exists, check_sqlx_exists, project_root, DbConfig};
 
-pub fn sqlx_prepare() -> Result<(), DynError> {
+pub fn sqlx_prepare() -> Result<(), anyhow::Error> {
     // wait_for_postgres()?;
     // check_sqlx_exists()?;
 
@@ -11,7 +11,7 @@ pub fn sqlx_prepare() -> Result<(), DynError> {
     Ok(())
 }
 
-pub fn docker_db() -> Result<(), DynError> {
+pub fn docker_db() -> Result<(), anyhow::Error> {
     check_psql_exists()?;
 
     // Set up needed variables from the environment or use defaults
@@ -59,7 +59,7 @@ pub fn docker_db() -> Result<(), DynError> {
     Ok(())
 }
 
-pub fn migrate_db() -> Result<(), DynError> {
+pub fn migrate_db() -> Result<(), anyhow::Error> {
     wait_for_postgres()?;
     check_sqlx_exists()?;
 
@@ -99,7 +99,7 @@ pub fn migrate_db() -> Result<(), DynError> {
         .status();
 
     if migration_status1.is_err() || migration_status2.is_err() {
-        return Err("there was a problem running the migration".into());
+        anyhow::bail!("there was a problem running the migration");
     }
 
     println!("Migration completed.");
@@ -107,7 +107,7 @@ pub fn migrate_db() -> Result<(), DynError> {
     Ok(())
 }
 
-fn wait_for_postgres() -> Result<(), DynError> {
+fn wait_for_postgres() -> Result<(), anyhow::Error> {
     // Set up needed variables from the environment or use defaults
     let db_config = DbConfig::get_config();
 

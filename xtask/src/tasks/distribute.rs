@@ -5,9 +5,9 @@ use std::{
 
 use man::Manual;
 
-use crate::{dist_dir, project_root, DynError};
+use crate::{dist_dir, project_root};
 
-pub fn dist() -> Result<(), DynError> {
+pub fn dist() -> Result<(), anyhow::Error> {
     let _ = fs::remove_dir_all(dist_dir());
     fs::create_dir_all(dist_dir())?;
 
@@ -17,7 +17,7 @@ pub fn dist() -> Result<(), DynError> {
     Ok(())
 }
 
-pub fn dist_binary() -> Result<(), DynError> {
+pub fn dist_binary() -> Result<(), anyhow::Error> {
     // Get the `cargo` command and then build the release
     let cargo = env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
     let status = Command::new(cargo)
@@ -26,7 +26,7 @@ pub fn dist_binary() -> Result<(), DynError> {
         .status()?;
 
     if !status.success() {
-        return Err("cargo build failed".into());
+        anyhow::bail!("cargo build failed");
     }
 
     // Set file paths based on the architecture
@@ -70,7 +70,7 @@ pub fn dist_binary() -> Result<(), DynError> {
         eprintln!("stripping the binary");
         let status = Command::new("strip").arg(&distributable).status()?;
         if !status.success() {
-            return Err("strip failed".into());
+            anyhow::bail!("strip failed");
         }
     } else {
         eprintln!("No `strip` utility found");
@@ -79,7 +79,7 @@ pub fn dist_binary() -> Result<(), DynError> {
     Ok(())
 }
 
-pub fn dist_manpage() -> Result<(), DynError> {
+pub fn dist_manpage() -> Result<(), anyhow::Error> {
     let page = Manual::new("zero2prod")
         .about("Runs a discord bot and website for Star Citizen guild content.")
         .render();
