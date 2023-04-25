@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
+use axum_extra::extract::WithRejection;
 use axum_macros::debug_handler;
 use http::StatusCode;
 use sqlx::PgPool;
@@ -17,12 +18,8 @@ use crate::{domain::SubscriberEmail, email_client::EmailClient, error_chain_fmt}
 pub async fn publish_newsletter(
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
-    body: Result<Json<BodyData>, JsonRejection>,
+    WithRejection(Json(body), _): WithRejection<Json<BodyData>, PublishError>,
 ) -> Result<impl IntoResponse, PublishError> {
-    let body = match body {
-        Ok(Json(payload)) => payload,
-        Err(e) => return Err(PublishError::UnexpectedError(anyhow::anyhow!(e))),
-    };
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
         match subscriber {
@@ -95,6 +92,8 @@ pub struct Content {
 pub enum PublishError {
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
+    #[error(transparent)]
+    JsonExtractionError(#[from] JsonRejection),
 }
 
 impl std::fmt::Debug for PublishError {
@@ -108,6 +107,7 @@ impl IntoResponse for PublishError {
         tracing::error!("{:?}", self);
         match self {
             PublishError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            PublishError::JsonExtractionError(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
         .into_response()
     }

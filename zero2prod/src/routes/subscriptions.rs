@@ -2,11 +2,12 @@ use std::{fmt::Display, sync::Arc};
 
 use anyhow::Context;
 use axum::{
-    extract::State,
+    extract::{rejection::FormRejection, State},
     http::StatusCode,
     response::{IntoResponse, Result},
     Form,
 };
+use axum_extra::extract::WithRejection;
 use axum_macros::debug_handler;
 use chrono::Utc;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -32,7 +33,7 @@ pub async fn subscribe(
     State(db): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
     State(base_url): State<ApplicationBaseUrl>,
-    Form(form): Form<FormData>,
+    WithRejection(Form(form), _): WithRejection<Form<FormData>, SubscribeError>,
 ) -> Result<impl IntoResponse, SubscribeError> {
     tracing::info!(
         "Adding '{}' '{}' as a new subscriber.",
@@ -198,6 +199,8 @@ pub enum SubscribeError {
     // to the type wrapped by `UnexpectedError`.
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
+    #[error(transparent)]
+    FormExtractionError(#[from] FormRejection),
 }
 
 impl std::fmt::Debug for SubscribeError {
@@ -212,6 +215,7 @@ impl IntoResponse for SubscribeError {
         match self {
             SubscribeError::ValidationError(_) => StatusCode::UNPROCESSABLE_ENTITY,
             SubscribeError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            SubscribeError::FormExtractionError(_) => StatusCode::UNPROCESSABLE_ENTITY,
         }
         .into_response()
     }
