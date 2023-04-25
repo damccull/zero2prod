@@ -52,4 +52,6 @@ jobs:
           cd zero2prod
           SKIP_DOCKER=true cargo xtask dockerdb
       - name: Generate code coverage
-        run: cargo tarpaulin --verbose --workspace
+        run: |
+          cd zero2prod
+          cargo tarpaulin --verbose
