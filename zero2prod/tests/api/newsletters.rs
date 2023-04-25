@@ -3,7 +3,59 @@ use wiremock::{
     Mock, ResponseTemplate,
 };
 
-use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
+use crate::helpers::spawn_app;
+
+mod newsletter_helpers {
+    use wiremock::{
+        matchers::{method, path},
+        Mock, ResponseTemplate,
+    };
+
+    use crate::helpers::{ConfirmationLinks, TestApp};
+    /// Use the public API of the applixation under test to create
+    /// and unconfirmed subscriber.
+    pub(crate) async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
+        let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+
+        let _mock_guard = Mock::given(path("/email"))
+            .and(method("POST"))
+            .respond_with(ResponseTemplate::new(200))
+            .named("Create unconfirmed subscriver")
+            .expect(1)
+            .mount_as_scoped(&app.email_server)
+            .await;
+
+        app.post_subscriptions(body.into())
+            .await
+            .error_for_status()
+            .unwrap();
+
+        // We now inspect the requests received by the mock Postmark server
+        // to retrieve the confirmation link and return it
+        let email_request = &app
+            .email_server
+            .received_requests()
+            .await
+            .unwrap()
+            .pop()
+            .unwrap();
+
+        app.get_confirmation_links(email_request)
+    }
+
+    pub(crate) async fn create_confirmed_subscriber(app: &TestApp) {
+        // We can reuse the other helper to create an unconfirmed subscriber
+        // then in this one follow the link to confirm it.
+        let confirmation_link = create_unconfirmed_subscriber(app).await;
+        reqwest::get(confirmation_link.html)
+            .await
+            .unwrap()
+            .error_for_status()
+            .unwrap();
+    }
+}
+
+use newsletter_helpers::*;
 
 #[tokio::test]
 async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
@@ -97,46 +149,4 @@ async fn newsletters_returns_422_for_invalid_data() {
             error_message
         );
     }
-}
-
-/// Use the public API of the applixation under test to create
-/// and unconfirmed subscriber.
-async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
-    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
-
-    let _mock_guard = Mock::given(path("/email"))
-        .and(method("POST"))
-        .respond_with(ResponseTemplate::new(200))
-        .named("Create unconfirmed subscriver")
-        .expect(1)
-        .mount_as_scoped(&app.email_server)
-        .await;
-
-    app.post_subscriptions(body.into())
-        .await
-        .error_for_status()
-        .unwrap();
-
-    // We now inspect the requests received by the mock Postmark server
-    // to retrieve the confirmation link and return it
-    let email_request = &app
-        .email_server
-        .received_requests()
-        .await
-        .unwrap()
-        .pop()
-        .unwrap();
-
-    app.get_confirmation_links(email_request)
-}
-
-async fn create_confirmed_subscriber(app: &TestApp) {
-    // We can reuse the other helper to create an unconfirmed subscriber
-    // then in this one follow the link to confirm it.
-    let confirmation_link = create_unconfirmed_subscriber(app).await;
-    reqwest::get(confirmation_link.html)
-        .await
-        .unwrap()
-        .error_for_status()
-        .unwrap();
 }
