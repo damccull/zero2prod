@@ -13,7 +13,10 @@ pub struct QueryParams {
 #[tracing::instrument(name = "Login form", skip(query))]
 pub async fn login_form(Query(query): Query<QueryParams>) -> impl IntoResponse {
     let error_html = match query.error {
-        Some(error_message) => format!("<p><i>{error_message}</i></p>"),
+        Some(error_message) => format!(
+            "<p><i>{}</i></p>",
+            htmlescape::encode_minimal(&error_message)
+        ),
         None => "".into(),
     };
     Html((
