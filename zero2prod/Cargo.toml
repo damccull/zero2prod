@@ -19,6 +19,7 @@ axum-macros = "0.3.7"
 base64 = "0.21.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 config = "0.13.3"
+htmlescape = "0.3.1"
 http = "0.2.9"
 hyper = "0.14.26"
 rand = { version = "0.8.5", features = ["std_rng"] }
