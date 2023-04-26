@@ -60,7 +60,7 @@ impl IntoResponse for LoginError {
     fn into_response(self) -> axum::response::Response {
         tracing::error!("{:?}", self);
         match self {
-            LoginError::AuthError(_) => StatusCode::UNAUTHORIZED.into_response(),
+            LoginError::AuthError(_) => Redirect::to("/login").into_response(),
             LoginError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
     }
