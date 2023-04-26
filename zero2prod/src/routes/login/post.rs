@@ -60,7 +60,10 @@ impl IntoResponse for LoginError {
     fn into_response(self) -> axum::response::Response {
         tracing::error!("{:?}", self);
         match self {
-            LoginError::AuthError(_) => Redirect::to("/login").into_response(),
+            LoginError::AuthError(_) => {
+                let encoded_error = urlencoding::Encoded::new(self.to_string());
+                Redirect::to(&format!("/login?error={}", encoded_error)).into_response()
+            }
             LoginError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
     }
