@@ -1,7 +1,6 @@
-use axum::response::IntoResponse;
-use http::StatusCode;
+use axum::response::{IntoResponse, Redirect};
 
 #[tracing::instrument(name = "Login posted")]
 pub async fn login() -> impl IntoResponse {
-    StatusCode::OK
+    Redirect::to("/").into_response()
 }
