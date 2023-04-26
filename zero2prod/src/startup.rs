@@ -10,7 +10,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
     configuration::{DatabaseSettings, Settings},
-    routes::{confirm, publish_newsletter},
+    routes::{confirm, home, publish_newsletter},
     telemetry::RouterExt,
 };
 use crate::{
@@ -96,6 +96,7 @@ pub fn run(
         .route("/subscriptions", post(subscribe))
         .route("/subscriptions/confirm", get(confirm))
         .route("/newsletters", post(publish_newsletter))
+        .route("/", get(home))
         .add_axum_tracing_layer()
         .with_state(app_state);
 
