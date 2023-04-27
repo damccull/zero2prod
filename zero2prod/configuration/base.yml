@@ -2,6 +2,7 @@ application:
   port: 8000
   host: "127.0.0.1"
   base_url: "set this via environment variable or production.yml"
+  hmac_secret: "set-this-in-the-environment-variables-or-secrets-on-your-host-before-launch-and-never-in-a-file"
 database:
   host: "127.0.0.1"
   port: 5432

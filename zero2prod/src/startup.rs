@@ -6,6 +6,7 @@ use axum::{
     Router, Server,
 };
 use hyper::server::conn::AddrIncoming;
+use secrecy::Secret;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
@@ -57,6 +58,7 @@ impl Application {
             db_pool,
             email_client,
             configuration.application.base_url,
+            configuration.application.hmac_secret,
         );
         Ok(Self { port, server })
     }
@@ -82,12 +84,14 @@ pub fn run(
     db_pool: PgPool,
     email_client: EmailClient,
     base_url: String,
+    hmac_secret: Secret<String>,
 ) -> AppServer {
     // Build app state
     let app_state = AppState {
         db_pool,
         email_client: Arc::new(email_client),
         base_url: ApplicationBaseUrl(base_url),
+        hmac_secret,
     };
 
     // Create a router that will contain and match all routes for the application
@@ -113,6 +117,7 @@ pub struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
+    hmac_secret: Secret<String>,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -130,6 +135,12 @@ impl FromRef<AppState> for Arc<EmailClient> {
 impl FromRef<AppState> for ApplicationBaseUrl {
     fn from_ref(app_state: &AppState) -> Self {
         app_state.base_url.clone()
+    }
+}
+
+impl FromRef<AppState> for Secret<String> {
+    fn from_ref(app_state: &AppState) -> Self {
+        app_state.hmac_secret.clone()
     }
 }
 

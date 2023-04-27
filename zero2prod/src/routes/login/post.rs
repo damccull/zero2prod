@@ -4,8 +4,9 @@ use axum::{
     Form,
 };
 use axum_macros::debug_handler;
+use hmac::{Hmac, Mac};
 use http::StatusCode;
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -14,7 +15,7 @@ use crate::{
     error_chain_fmt,
 };
 
-#[debug_handler]
+#[debug_handler(state = crate::startup::AppState)]
 #[tracing::instrument(
     name = "Login posted"
     skip(form, pool),
@@ -22,6 +23,7 @@ use crate::{
 )]
 pub async fn login(
     State(pool): State<PgPool>,
+    State(hmac_secret): State<Secret<String>>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -31,16 +33,31 @@ pub async fn login(
 
     tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
 
-    let user_id = validate_credentials(credentials, &pool)
-        .await
-        .map_err(|e| match e {
-            AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
-            AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
-        })?;
+    let response = match validate_credentials(credentials, &pool).await {
+        Ok(user_id) => {
+            tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            Redirect::to("/").into_response()
+        }
+        Err(e) => {
+            let e = match e {
+                AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
+                AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
+            };
+            let query_string = format!("error={}", urlencoding::Encoded::new(e.to_string()));
 
-    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            let hmac_tag = {
+                let mut mac =
+                    Hmac::<sha3::Sha3_256>::new_from_slice(hmac_secret.expose_secret().as_bytes())
+                        .unwrap();
+                mac.update(query_string.as_bytes());
+                mac.finalize().into_bytes()
+            };
 
-    Ok(Redirect::to("/"))
+            Redirect::to(&format!("/login?{query_string}&tag={hmac_tag:x}")).into_response()
+        }
+    };
+
+    Ok(response)
 }
 
 #[derive(Deserialize)]
@@ -60,10 +77,7 @@ impl IntoResponse for LoginError {
     fn into_response(self) -> axum::response::Response {
         tracing::error!("{:?}", self);
         match self {
-            LoginError::AuthError(_) => {
-                let encoded_error = urlencoding::Encoded::new(self.to_string());
-                Redirect::to(&format!("/login?error={}", encoded_error)).into_response()
-            }
+            LoginError::AuthError(_) => StatusCode::UNAUTHORIZED.into_response(),
             LoginError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         }
     }
