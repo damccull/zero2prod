@@ -13,17 +13,18 @@ use sqlx::PgPool;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     error_chain_fmt,
+    startup::HmacSecret,
 };
 
 #[debug_handler(state = crate::startup::AppState)]
 #[tracing::instrument(
     name = "Login posted"
-    skip(form, pool),
+    skip(form, hmac_secret, pool),
     fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
 pub async fn login(
     State(pool): State<PgPool>,
-    State(hmac_secret): State<Secret<String>>,
+    State(hmac_secret): State<HmacSecret>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -46,9 +47,10 @@ pub async fn login(
             let query_string = format!("error={}", urlencoding::Encoded::new(e.to_string()));
 
             let hmac_tag = {
-                let mut mac =
-                    Hmac::<sha3::Sha3_256>::new_from_slice(hmac_secret.expose_secret().as_bytes())
-                        .unwrap();
+                let mut mac = Hmac::<sha3::Sha3_256>::new_from_slice(
+                    hmac_secret.0.expose_secret().as_bytes(),
+                )
+                .unwrap();
                 mac.update(query_string.as_bytes());
                 mac.finalize().into_bytes()
             };

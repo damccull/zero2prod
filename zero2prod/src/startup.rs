@@ -91,7 +91,7 @@ pub fn run(
         db_pool,
         email_client: Arc::new(email_client),
         base_url: ApplicationBaseUrl(base_url),
-        hmac_secret,
+        hmac_secret: HmacSecret(hmac_secret),
     };
 
     // Create a router that will contain and match all routes for the application
@@ -117,7 +117,7 @@ pub struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
-    hmac_secret: Secret<String>,
+    hmac_secret: HmacSecret,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -138,11 +138,14 @@ impl FromRef<AppState> for ApplicationBaseUrl {
     }
 }
 
-impl FromRef<AppState> for Secret<String> {
+impl FromRef<AppState> for HmacSecret {
     fn from_ref(app_state: &AppState) -> Self {
         app_state.hmac_secret.clone()
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ApplicationBaseUrl(pub String);
+
+#[derive(Clone)]
+pub struct HmacSecret(pub Secret<String>);
