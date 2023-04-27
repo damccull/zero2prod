@@ -19,6 +19,7 @@ axum-macros = "0.3.7"
 base64 = "0.21.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 config = "0.13.3"
+hex = "0.4.3"
 hmac = { version = "0.12.1", features = ["std"] }
 htmlescape = "0.3.1"
 http = "0.2.9"

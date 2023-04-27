@@ -40,6 +40,7 @@ pub async fn login(
             Redirect::to("/").into_response()
         }
         Err(e) => {
+            tracing::error!("{:?}", &e);
             let e = match e {
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
