@@ -173,6 +173,17 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    pub async fn get_login_html(&self) -> String {
+        reqwest::Client::new()
+            .get(&format!("{}/login", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request")
+            .text()
+            .await
+            .unwrap()
+    }
+
     pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
         let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 

@@ -4,27 +4,24 @@ use axum::{
     Form,
 };
 use axum_macros::debug_handler;
-use hmac::{Hmac, Mac};
-use http::StatusCode;
-use secrecy::{ExposeSecret, Secret};
+use http::{header, HeaderMap, StatusCode};
+use secrecy::Secret;
 use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     error_chain_fmt,
-    startup::HmacSecret,
 };
 
 #[debug_handler(state = crate::startup::AppState)]
 #[tracing::instrument(
     name = "Login posted"
-    skip(form, hmac_secret, pool),
+    skip(form, pool),
     fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
 pub async fn login(
     State(pool): State<PgPool>,
-    State(hmac_secret): State<HmacSecret>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -40,23 +37,16 @@ pub async fn login(
             Redirect::to("/").into_response()
         }
         Err(e) => {
-            tracing::error!("{:?}", &e);
             let e = match e {
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
-            let query_string = format!("error={}", urlencoding::Encoded::new(e.to_string()));
+            tracing::error!("{:?}", &e);
 
-            let hmac_tag = {
-                let mut mac = Hmac::<sha3::Sha3_256>::new_from_slice(
-                    hmac_secret.0.expose_secret().as_bytes(),
-                )
-                .unwrap();
-                mac.update(query_string.as_bytes());
-                mac.finalize().into_bytes()
-            };
-
-            Redirect::to(&format!("/login?{query_string}&tag={hmac_tag:x}")).into_response()
+            let response = Redirect::to("/login").into_response();
+            let mut headers = HeaderMap::new();
+            headers.insert(header::SET_COOKIE, format!("_flash={e}").parse().unwrap());
+            (headers, response).into_response()
         }
     };
 
