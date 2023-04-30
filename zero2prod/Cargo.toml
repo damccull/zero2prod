@@ -14,7 +14,7 @@ name = "zero2prod"
 anyhow = "1.0.70"
 argon2 = { version = "0.5.0", features = ["std"] }
 axum = { version = "0.6.15", features = ["tracing"] }
-axum-extra = "0.7.4"
+axum-extra = { version = "0.7.4", features = ["cookie"] }
 axum-macros = "0.3.7"
 base64 = "0.21.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
