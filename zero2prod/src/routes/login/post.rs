@@ -46,7 +46,6 @@ pub async fn login(
             };
             tracing::error!("{:?}", &e);
 
-            let flash = flash.debug("test");
             let flash = flash.error(e.to_string());
 
             let response = Redirect::to("/login").into_response();
