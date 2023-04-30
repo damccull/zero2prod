@@ -1,6 +1,6 @@
 use axum::response::IntoResponse;
 use axum_extra::response::Html;
-use axum_flash::IncomingFlashes;
+use axum_flash::{IncomingFlashes, Level};
 use axum_macros::debug_handler;
 use http::StatusCode;
 use std::fmt::Write;
@@ -10,7 +10,7 @@ use std::fmt::Write;
 pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
     let mut error_html = String::new();
 
-    for (level, text) in flashes.iter() {
+    for (level, text) in flashes.iter().filter(|m| m.0 == Level::Error) {
         writeln!(
             error_html,
             "<p><strong>{:?}</strong>: <i>{}</i></p>\n",
