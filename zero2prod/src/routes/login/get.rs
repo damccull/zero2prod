@@ -1,57 +1,27 @@
-use axum::{
-    extract::{Query, State},
-    response::IntoResponse,
+use axum::response::IntoResponse;
+use axum_extra::{
+    extract::{cookie::Cookie, CookieJar},
+    response::Html,
 };
-use axum_extra::response::Html;
 use axum_macros::debug_handler;
-use hmac::{Hmac, Mac};
 use http::StatusCode;
-use secrecy::ExposeSecret;
-use serde::Deserialize;
-
-use crate::startup::HmacSecret;
-
-#[derive(Deserialize)]
-pub struct QueryParams {
-    error: String,
-    tag: String,
-}
-
-impl QueryParams {
-    fn verify(self, secret: &HmacSecret) -> Result<String, anyhow::Error> {
-        let tag = hex::decode(self.tag)?;
-        let query_string = format!("error={}", urlencoding::Encoded::new(&self.error));
-        let mut mac =
-            Hmac::<sha3::Sha3_256>::new_from_slice(secret.0.expose_secret().as_bytes()).unwrap();
-        mac.update(query_string.as_bytes());
-        mac.verify_slice(&tag)?;
-        Ok(self.error)
-    }
-}
 
 #[debug_handler]
-#[tracing::instrument(name = "Login form", skip(hmac_secret, query))]
-pub async fn login_form(
-    State(hmac_secret): State<HmacSecret>,
-    query: Option<Query<QueryParams>>,
-) -> impl IntoResponse {
-    tracing::error!("Testing");
-
-    let error_html = match query {
-        Some(Query(query)) => match query.verify(&hmac_secret) {
-            Ok(error) => {
-                format!("<p><i>{}</i></p>", htmlescape::encode_minimal(&error))
-            }
-            Err(e) => {
-                tracing::warn!(error.message = %e,
-                    error.cause = ?e,
-                    "Failed to verify query parameters using HMAC tag.");
-                "".into()
-            }
-        },
+#[tracing::instrument(name = "Login form")]
+pub async fn login_form(jar: CookieJar) -> impl IntoResponse {
+    let error_html = match jar.get("_flash") {
         None => "".into(),
+        Some(cookie) => {
+            format!("<p><i>{}</i></p>", cookie.value())
+        }
     };
-    Html((
+
+    let mut eat_flash_cookie = Cookie::new("_flash", "");
+    eat_flash_cookie.make_removal();
+
+    let jar = jar.remove(Cookie::named("_flash")).add(eat_flash_cookie);
+
+    let body_response = Html((
         StatusCode::OK,
         format!(
             r#"
@@ -79,5 +49,7 @@ pub async fn login_form(
             </html>
             "#
         ),
-    ))
+    ));
+
+    (jar, body_response)
 }

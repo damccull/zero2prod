@@ -9,16 +9,31 @@ pub fn assert_is_redirect_to(response: &reqwest::Response, location: &str) {
 async fn an_error_flash_message_is_set_on_failure() {
     // Arrange
     let app = spawn_app().await;
-    // Act
+
+    // Act 1
     let login_body = serde_json::json!({
         "username": "random-username",
         "password":"random-password"
     });
     let response = app.post_login(&login_body).await;
 
+    // Assert 1
+    assert_is_redirect_to(&response, "/login");
+
+    // Act 2
+    let html_page = app.get_login_html().await;
     let flash_cookie = response.cookies().find(|c| c.name() == "_flash").unwrap();
 
-    // Assert
-    assert_is_redirect_to(&response, "/login");
-    assert_eq!("Authentication failed", flash_cookie.value());
+    // Assert 2
+    // Follow the redirect
+    assert!(html_page.contains(r#"<p><i>Authentication failed</i></p>"#));
+    assert_eq!("Authentication%20failed", flash_cookie.value());
+
+    // Act 3
+    //Reload the page
+    let html_page = app.get_login_html().await;
+
+    // Assert 3
+    // Should NOT have the 'Authentication failed' message
+    assert!(!html_page.contains(r#"<p><i>Authentication failed</i></p>"#));
 }

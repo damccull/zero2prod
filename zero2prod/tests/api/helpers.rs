@@ -51,12 +51,19 @@ pub async fn spawn_app() -> TestApp {
     let address = format!("http://127.0.0.1:{}", app.port());
     tokio::spawn(app.run_until_stopped());
 
+    let api_client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .cookie_store(true)
+        .build()
+        .unwrap();
+
     let test_app = TestApp {
         address,
         port,
         db_pool: get_db_pool(&configuration.database),
         email_server,
         test_user: TestUser::generate(),
+        api_client,
     };
 
     test_app.test_user.store(&test_app.db_pool).await;
@@ -135,12 +142,13 @@ pub struct TestApp {
     pub db_pool: PgPool,
     pub email_server: MockServer,
     pub test_user: TestUser,
+    pub api_client: reqwest::Client,
 }
 
 impl TestApp {
     /// Send a post request to the subscriptions endpoint.
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
-        reqwest::Client::new()
+        self.api_client
             .post(&format!("{}/subscriptions", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body)
@@ -151,7 +159,7 @@ impl TestApp {
 
     /// Send a post request to the newsletters endpoint.
     pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
-        reqwest::Client::new()
+        self.api_client
             .post(&format!("{}/newsletters", &self.address))
             .basic_auth(&self.test_user.username, Some(&self.test_user.password))
             .json(&body)
@@ -165,10 +173,7 @@ impl TestApp {
     where
         Body: serde::Serialize,
     {
-        reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .unwrap()
+        self.api_client
             .post(&format!("{}/login", &self.address))
             .form(body)
             .send()
@@ -178,7 +183,7 @@ impl TestApp {
 
     /// Send a get request to the login endpoint.
     pub async fn get_login_html(&self) -> String {
-        reqwest::Client::new()
+        self.api_client
             .get(&format!("{}/login", &self.address))
             .send()
             .await

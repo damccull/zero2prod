@@ -3,8 +3,10 @@ use axum::{
     response::{IntoResponse, Redirect},
     Form,
 };
+
+use axum_extra::extract::{cookie::Cookie, CookieJar};
 use axum_macros::debug_handler;
-use http::{header, HeaderMap, StatusCode};
+use http::StatusCode;
 use secrecy::Secret;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -22,6 +24,7 @@ use crate::{
 )]
 pub async fn login(
     State(pool): State<PgPool>,
+    jar: CookieJar,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -43,10 +46,11 @@ pub async fn login(
             };
             tracing::error!("{:?}", &e);
 
+            let jar = jar.add(Cookie::new("_flash", e.to_string()));
+
             let response = Redirect::to("/login").into_response();
-            let mut headers = HeaderMap::new();
-            headers.insert(header::SET_COOKIE, format!("_flash={e}").parse().unwrap());
-            (headers, response).into_response()
+
+            (jar, response).into_response()
         }
     };
 
