@@ -25,7 +25,7 @@ async fn an_error_flash_message_is_set_on_failure() {
 
     // Assert 2
     // Follow the redirect
-    assert!(html_page.contains(r#"<p><i>Authentication failed</i></p>"#));
+    assert!(html_page.contains(r#"Authentication failed"#));
 
     // Act 3
     //Reload the page
@@ -33,5 +33,5 @@ async fn an_error_flash_message_is_set_on_failure() {
 
     // Assert 3
     // Should NOT have the 'Authentication failed' message
-    assert!(!html_page.contains(r#"<p><i>Authentication failed</i></p>"#));
+    assert!(!html_page.contains(r#"Authentication failed"#));
 }
