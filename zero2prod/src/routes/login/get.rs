@@ -4,7 +4,7 @@ use axum_flash::IncomingFlashes;
 use axum_macros::debug_handler;
 use http::StatusCode;
 
-#[debug_handler]
+#[debug_handler(state = axum_flash::Config)]
 #[tracing::instrument(name = "Login form")]
 pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
     let error_html = &flashes
