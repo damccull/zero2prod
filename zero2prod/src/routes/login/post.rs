@@ -4,7 +4,6 @@ use axum::{
     Form,
 };
 
-use axum_extra::extract::CookieJar;
 use axum_flash::Flash;
 use axum_macros::debug_handler;
 use http::StatusCode;
@@ -26,7 +25,6 @@ use crate::{
 pub async fn login(
     State(pool): State<PgPool>,
     flash: Flash,
-    jar: CookieJar,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
