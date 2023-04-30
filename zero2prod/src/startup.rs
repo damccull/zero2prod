@@ -5,8 +5,9 @@ use axum::{
     routing::{get, post, IntoMakeService},
     Router, Server,
 };
+use axum_flash::Key;
 use hyper::server::conn::AddrIncoming;
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
@@ -91,7 +92,8 @@ pub fn run(
         db_pool,
         email_client: Arc::new(email_client),
         base_url: ApplicationBaseUrl(base_url),
-        hmac_secret: HmacSecret(hmac_secret),
+        //hmac_secret: HmacSecret(hmac_secret),
+        flash_config: axum_flash::Config::new(Key::from(hmac_secret.expose_secret().as_bytes())),
     };
 
     // Create a router that will contain and match all routes for the application
@@ -117,7 +119,8 @@ pub struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
-    hmac_secret: HmacSecret,
+    //hmac_secret: HmacSecret,
+    flash_config: axum_flash::Config,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -138,9 +141,15 @@ impl FromRef<AppState> for ApplicationBaseUrl {
     }
 }
 
-impl FromRef<AppState> for HmacSecret {
-    fn from_ref(app_state: &AppState) -> Self {
-        app_state.hmac_secret.clone()
+// impl FromRef<AppState> for HmacSecret {
+//     fn from_ref(app_state: &AppState) -> Self {
+//         app_state.hmac_secret.clone()
+//     }
+// }
+
+impl FromRef<AppState> for axum_flash::Config {
+    fn from_ref(app_state: &AppState) -> axum_flash::Config {
+        app_state.flash_config.clone()
     }
 }
 

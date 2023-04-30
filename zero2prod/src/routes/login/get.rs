@@ -1,25 +1,21 @@
 use axum::response::IntoResponse;
-use axum_extra::{
-    extract::{cookie::Cookie, CookieJar},
-    response::Html,
-};
+use axum_extra::response::Html;
+use axum_flash::IncomingFlashes;
 use axum_macros::debug_handler;
 use http::StatusCode;
 
 #[debug_handler]
 #[tracing::instrument(name = "Login form")]
-pub async fn login_form(jar: CookieJar) -> impl IntoResponse {
-    let error_html = match jar.get("_flash") {
-        None => "".into(),
-        Some(cookie) => {
-            format!("<p><i>{}</i></p>", cookie.value())
-        }
-    };
-
-    let mut eat_flash_cookie = Cookie::new("_flash", "");
-    eat_flash_cookie.make_removal();
-
-    let jar = jar.remove(Cookie::named("_flash")).add(eat_flash_cookie);
+pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
+    let error_html = &flashes
+        .iter()
+        .fold(String::new(), |mut acc, (level, text)| {
+            acc.push_str(&format!(
+                "<p><strong>{:?}</strong><i>{}</i></p>\n",
+                level, text
+            ));
+            acc
+        });
 
     let body_response = Html((
         StatusCode::OK,
@@ -51,5 +47,5 @@ pub async fn login_form(jar: CookieJar) -> impl IntoResponse {
         ),
     ));
 
-    (jar, body_response)
+    (flashes, body_response)
 }

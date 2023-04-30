@@ -4,7 +4,8 @@ use axum::{
     Form,
 };
 
-use axum_extra::extract::{cookie::Cookie, CookieJar};
+use axum_extra::extract::CookieJar;
+use axum_flash::Flash;
 use axum_macros::debug_handler;
 use http::StatusCode;
 use secrecy::Secret;
@@ -24,6 +25,7 @@ use crate::{
 )]
 pub async fn login(
     State(pool): State<PgPool>,
+    flash: Flash,
     jar: CookieJar,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
@@ -46,11 +48,12 @@ pub async fn login(
             };
             tracing::error!("{:?}", &e);
 
-            let jar = jar.add(Cookie::new("_flash", e.to_string()));
+            let flash = flash.debug("test");
+            let flash = flash.error(e.to_string());
 
             let response = Redirect::to("/login").into_response();
 
-            (jar, response).into_response()
+            (flash, response).into_response()
         }
     };
 
