@@ -138,6 +138,7 @@ pub struct TestApp {
 }
 
 impl TestApp {
+    /// Send a post request to the subscriptions endpoint.
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
         reqwest::Client::new()
             .post(&format!("{}/subscriptions", &self.address))
@@ -148,6 +149,7 @@ impl TestApp {
             .expect("failed to execute request")
     }
 
+    /// Send a post request to the newsletters endpoint.
     pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
         reqwest::Client::new()
             .post(&format!("{}/newsletters", &self.address))
@@ -158,6 +160,7 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    /// Send a post request to the login endpoint.
     pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
     where
         Body: serde::Serialize,
@@ -173,6 +176,7 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    /// Send a get request to the login endpoint.
     pub async fn get_login_html(&self) -> String {
         reqwest::Client::new()
             .get(&format!("{}/login", &self.address))
@@ -184,6 +188,7 @@ impl TestApp {
             .unwrap()
     }
 
+    /// Get the confirmation links from the mock email.
     pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
         let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 
