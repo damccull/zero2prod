@@ -11,7 +11,7 @@ pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
         .iter()
         .fold(String::new(), |mut acc, (level, text)| {
             acc.push_str(&format!(
-                "<p><strong>{:?}</strong><i>{}</i></p>\n",
+                "<p><strong>{:?}</strong>: <i>{}</i></p>\n",
                 level, text
             ));
             acc
