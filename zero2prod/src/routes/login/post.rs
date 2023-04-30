@@ -19,7 +19,7 @@ use crate::{
 #[debug_handler(state = crate::startup::AppState)]
 #[tracing::instrument(
     name = "Login posted"
-    skip(form, pool),
+    skip(form, flash, pool),
     fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
 pub async fn login(
