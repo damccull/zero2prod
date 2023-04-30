@@ -3,19 +3,21 @@ use axum_extra::response::Html;
 use axum_flash::IncomingFlashes;
 use axum_macros::debug_handler;
 use http::StatusCode;
+use std::fmt::Write;
 
 #[debug_handler(state = axum_flash::Config)]
-#[tracing::instrument(name = "Login form")]
+#[tracing::instrument(name = "Login form", skip(flashes))]
 pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
-    let error_html = &flashes
-        .iter()
-        .fold(String::new(), |mut acc, (level, text)| {
-            acc.push_str(&format!(
-                "<p><strong>{:?}</strong>: <i>{}</i></p>\n",
-                level, text
-            ));
-            acc
-        });
+    let mut error_html = String::new();
+
+    for (level, text) in flashes.iter() {
+        writeln!(
+            error_html,
+            "<p><strong>{:?}</strong>: <i>{}</i></p>\n",
+            level, text
+        )
+        .unwrap();
+    }
 
     let body_response = Html((
         StatusCode::OK,
