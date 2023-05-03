@@ -3,7 +3,7 @@ use std::env;
 use xtask::tasks::{
     ci::ci,
     coverage::coverage,
-    database::{docker_db, migrate_db, sqlx_prepare},
+    database::{db_command, migrate_postgres_db, postgres_db, sqlx_prepare},
     distribute::dist,
     test::xtest,
 };
@@ -20,9 +20,11 @@ fn try_main() -> Result<(), anyhow::Error> {
     match task.as_deref() {
         Some("ci") => ci(),
         Some("coverage") => coverage(),
+        Some("db") => db_command(),
         Some("dist") => dist(),
-        Some("dockerdb") => docker_db(),
-        Some("migrate") => migrate_db(),
+        Some("migrate") => migrate_postgres_db(),
+        Some("postgres") => postgres_db(),
+        Some("redis") => xtask::tasks::database::setup_redis(),
         Some("sqlxprepare") => sqlx_prepare(),
         Some("test") => xtest(),
         _ => print_help(),
@@ -40,8 +42,10 @@ Tasks:
   coverage        runs test coverage analysis
   dist            builds application and man pages
   sqlxprepare     runs the correct sqlx prepare command
-  dockerdb        starts up a postgres docker container and runs migrations
-  migrate         runs database migrations
+  postgres        starts up a postgres docker container and runs migrations
+  migrate         runs postgres database migrations
+  redis           starts up a redis server
+  db              alias for 'postgres' then 'redis'
 "#
     );
 
