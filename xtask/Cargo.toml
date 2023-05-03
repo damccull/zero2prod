@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.71"
-chrono = "0.4.24"
+chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
 man = "0.3.0"
 owo-colors = "3.5.0"
