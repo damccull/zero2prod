@@ -90,7 +90,7 @@ pub fn run(
     email_client: EmailClient,
     base_url: String,
     hmac_secret: Secret<String>,
-    redis_uri: Secret<String>,
+    _redis_uri: Secret<String>,
 ) -> AppServer {
     // Build app state
     let app_state = AppState {
