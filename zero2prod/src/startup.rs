@@ -28,9 +28,12 @@ pub struct Application {
 }
 
 impl Application {
-    pub async fn build(configuration: Settings) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn build(configuration: Settings) -> Result<Self, anyhow::Error> {
         // Get database pool
         let db_pool = get_db_pool(&configuration.database);
+
+        // Build a redis connection
+        //let redis = redis::
 
         // Build an email client
         let timeout = configuration.email_client.timeout();
@@ -60,6 +63,7 @@ impl Application {
             email_client,
             configuration.application.base_url,
             configuration.application.hmac_secret,
+            configuration.redis.uri,
         );
         Ok(Self { port, server })
     }
@@ -86,13 +90,13 @@ pub fn run(
     email_client: EmailClient,
     base_url: String,
     hmac_secret: Secret<String>,
+    redis_uri: Secret<String>,
 ) -> AppServer {
     // Build app state
     let app_state = AppState {
         db_pool,
         email_client: Arc::new(email_client),
         base_url: ApplicationBaseUrl(base_url),
-        //hmac_secret: HmacSecret(hmac_secret),
         flash_config: axum_flash::Config::new(Key::from(hmac_secret.expose_secret().as_bytes())),
     };
 
@@ -119,7 +123,6 @@ pub struct AppState {
     db_pool: PgPool,
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
-    //hmac_secret: HmacSecret,
     flash_config: axum_flash::Config,
 }
 
@@ -140,12 +143,6 @@ impl FromRef<AppState> for ApplicationBaseUrl {
         app_state.base_url.clone()
     }
 }
-
-// impl FromRef<AppState> for HmacSecret {
-//     fn from_ref(app_state: &AppState) -> Self {
-//         app_state.hmac_secret.clone()
-//     }
-// }
 
 impl FromRef<AppState> for axum_flash::Config {
     fn from_ref(app_state: &AppState) -> axum_flash::Config {

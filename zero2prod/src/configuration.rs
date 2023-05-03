@@ -48,7 +48,14 @@ pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
     pub email_client: EmailClientSettings,
+    pub redis: RedisSettings,
 }
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct RedisSettings {
+    pub uri: Secret<String>,
+}
+
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ApplicationSettings {

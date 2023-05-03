@@ -14,3 +14,5 @@ email_client:
   sender_email: "test@gmail.com"
   authorization_token: "set this in an environment variable"
   timeout_milliseconds: 10000
+redis:
+  uri: "redis://127.0.0.1:6379"
