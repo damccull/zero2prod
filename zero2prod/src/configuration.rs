@@ -56,7 +56,6 @@ pub struct RedisSettings {
     pub uri: Secret<String>,
 }
 
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
