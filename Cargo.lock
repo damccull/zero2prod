@@ -117,17 +117,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-recursion"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e97ce7de6cf12de5d7226c73f5ba9811622f4db3a5b91b55c53e987e5f91cba"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.15",
-]
-
-[[package]]
 name = "async-trait"
 version = "0.1.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -301,29 +290,6 @@ dependencies = [
  "tower-service",
  "tracing",
  "uuid",
-]
-
-[[package]]
-name = "axum_session_auth"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8034ced3ea411ad31aaba1e2aa747eb453dc5351df0bf4e0be2e5711bb86376"
-dependencies = [
- "anyhow",
- "async-recursion",
- "async-trait",
- "axum-core",
- "axum_session",
- "bytes",
- "chrono",
- "dashmap",
- "futures",
- "http",
- "http-body",
- "serde",
- "tokio",
- "tower-layer",
- "tower-service",
 ]
 
 [[package]]
@@ -3126,7 +3092,6 @@ dependencies = [
  "axum-flash",
  "axum-macros",
  "axum_session",
- "axum_session_auth",
  "base64 0.21.0",
  "chrono",
  "claims",
