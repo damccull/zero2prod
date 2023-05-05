@@ -1,6 +1,0 @@
-[advisories]
-ignore = [
-    # This is unavoidable until `chrono` updates their dependency on `time`
-    # to something >= 0.2.23. Similar to RUSTSEC-2020-0159
-    "RUSTSEC-2020-0071"
-]
