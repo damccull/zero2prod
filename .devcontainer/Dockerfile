@@ -14,3 +14,6 @@ RUN cargo install cargo-audit
 RUN cargo install cargo-edit
 RUN cargo install cargo-whatfeatures
 RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
+
+# Install Act tool to run GH actions locally
+RUN curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
