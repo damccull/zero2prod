@@ -50,7 +50,7 @@ jobs:
       - name: Migrate database
         run: |
           cd zero2prod
-          SKIP_DOCKER=true cargo xtask db
+          SKIP_DOCKER=true cargo xtask postgres
       - name: Generate code coverage
         run: |
           cd zero2prod

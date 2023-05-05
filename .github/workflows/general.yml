@@ -48,7 +48,7 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           cd zero2prod
-          SKIP_DOCKER=true cargo xtask db
+          SKIP_DOCKER=true cargo xtask postgres
       - name: Check sqlx-data.json is up-to-date
         run: |
           cd zero2prod
@@ -98,6 +98,6 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           cd zero2prod
-          SKIP_DOCKER=true cargo xtask db
+          SKIP_DOCKER=true cargo xtask postgres
       - name: Linting
         run: cargo clippy -- -D warnings
