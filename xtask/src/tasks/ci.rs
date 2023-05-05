@@ -26,10 +26,10 @@ pub fn ci() -> Result<(), anyhow::Error> {
     println!("Running tests...");
     let test = run_test()?;
 
-    println!("Running `cargo audit`...");
+    println!("Running `cargo deny`...");
     let audit = Command::new("cargo")
         .current_dir(project_root())
-        .args(["audit"])
+        .args(["deny", "check"])
         .status()?;
 
     println!("Running `cargo fmt`...");
@@ -48,7 +48,7 @@ pub fn ci() -> Result<(), anyhow::Error> {
     print_error_with_status_code("cargo clippy", clippy);
     print_error_with_status_code("cargo build", build);
     print_error_with_status_code("tests", test);
-    print_error_with_status_code("cargo audit", audit);
+    print_error_with_status_code("cargo deny", audit);
     print_error_with_status_code("cargo fmt", fmt);
     print_error_with_status_code("cargo sqlx prepare", sqlx_prep);
 
