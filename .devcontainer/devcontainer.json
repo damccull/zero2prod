@@ -2,6 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.238.0/containers/rust
 {
 	"name": "zero2prod Rust and Postgres",
+	"shutdownAction": "stopCompose",
 	"build": {
 		//"dockerfile": "Dockerfile",
 		"dockerComposeFile": "docker-compose.yml",
