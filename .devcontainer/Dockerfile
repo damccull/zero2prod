@@ -10,7 +10,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 
 USER 1000
 # Install some cargo tools
-RUN cargo install cargo-audit
+RUN cargo install cargo-deny
 RUN cargo install cargo-edit
 RUN cargo install cargo-whatfeatures
 RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
