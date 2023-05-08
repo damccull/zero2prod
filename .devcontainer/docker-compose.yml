@@ -1,15 +1,18 @@
 version: '3.8'
 
 services:
-  app:
+  devcontainer:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: "buster"
     volumes:
       - ..:/workspace:cached
+
     command: sleep infinity
     network_mode: service:db
-  
+
   db:
     image: postgres:latest
     restart: unless-stopped

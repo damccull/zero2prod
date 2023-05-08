@@ -9,10 +9,15 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends lld clang postgresql-client
 
 USER 1000
+# Install cargo-binstall
+#RUN mkdir -p /usr/local/cargo/bin
+RUN wget -qO - "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz" | tar zxvf - -C /usr/local/cargo/bin
 # Install some cargo tools
-RUN cargo install cargo-deny
-RUN cargo install cargo-edit
-RUN cargo install cargo-whatfeatures
+RUN cargo binstall -y cargo-deny
+RUN cargo binstall -y cargo-edit
+RUN cargo binstall -y cargo-whatfeatures
+
+# Can't use binstall due to unique requirements
 RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
 
 # Install Act tool to run GH actions locally
