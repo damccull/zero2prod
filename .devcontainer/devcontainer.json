@@ -1,9 +1,10 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.238.0/containers/rust
 {
-	"name": "Rust",
+	"name": "zero2prod Rust and Postgres",
 	"build": {
-		"dockerfile": "Dockerfile",
+		//"dockerfile": "Dockerfile",
+		"dockerComposeFile": "docker-compose.yml",
 		"args": {
 			// Use the VARIANT arg to pick a Debian OS version: buster, bullseye
 			// Use bullseye when on local on arm64/Apple Silicon.
