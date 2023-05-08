@@ -6,7 +6,7 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
       args:
-        VARIANT: "buster"
+        VARIANT: "bullseye"
     volumes:
       - ..:/workspace:cached
 
