@@ -16,6 +16,7 @@ RUN wget -qO - "https://github.com/cargo-bins/cargo-binstall/releases/latest/dow
 RUN cargo binstall -y cargo-deny
 RUN cargo binstall -y cargo-edit
 RUN cargo binstall -y cargo-whatfeatures
+RUN cargo binstall -y cargo-nextest
 
 # Can't use binstall due to unique requirements
 RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
