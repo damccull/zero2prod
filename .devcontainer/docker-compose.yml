@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   devcontainer:
+    user: 1000:1000
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
