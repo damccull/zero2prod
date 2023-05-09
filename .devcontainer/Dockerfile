@@ -29,5 +29,17 @@ RUN cargo binstall -y cargo-nextest
 # Can't use binstall due to unique requirements
 RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
 
+# Setup neovim
+RUN mkdir -p $HOME/.config/nvim && \
+    echo "\
+    set number\n\
+    set relativenumber\n\
+    set expandtab\n\
+    set shiftwidth=4\n\
+    set tabstop=4\n\
+    set softtabstop=4\n\
+    "\
+    > $HOME/.config/nvim/init.vim
+
 # Install Act tool to run GH actions locally
 RUN curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
