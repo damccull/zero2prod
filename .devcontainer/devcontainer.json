@@ -4,7 +4,7 @@
 	"name": "zero2prod Rust and Postgres",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "devcontainer",
-	"workspaceFolder": "/workspace",
+	"workspaceFolder": "/workspace/zero2prod",
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
