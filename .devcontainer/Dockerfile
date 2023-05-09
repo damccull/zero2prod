@@ -5,8 +5,14 @@ ARG VARIANT="buster"
 FROM mcr.microsoft.com/vscode/devcontainers/rust:${VARIANT}
 
 # [Optional] Uncomment this section to install additional packages.
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends lld clang postgresql-client neovim
+RUN apt-get update && \
+    export DEBIAN_FRONTEND=noninteractive && \
+    apt-get -y install --no-install-recommends \
+    clang \
+    lld \
+    neovim\
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
 USER 1000
 # Install cargo-binstall
