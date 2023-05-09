@@ -15,6 +15,8 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 USER 1000
+ENV HOME /home/vscode
+
 # Install cargo-binstall
 #RUN mkdir -p /usr/local/cargo/bin
 RUN wget -qO - "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz" | tar zxvf - -C /usr/local/cargo/bin
