@@ -6,6 +6,7 @@ use axum::{
     Router, Server,
 };
 use axum_flash::Key;
+use axum_session::{SessionConfig, SessionRedisPool, SessionStore};
 use hyper::server::conn::AddrIncoming;
 use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -33,7 +34,11 @@ impl Application {
         let db_pool = get_db_pool(&configuration.database);
 
         // Build a redis connection
-        //let redis = redis::
+        let redis = redis::Client::open(configuration.redis.uri.expose_secret().as_str())?;
+        // Create a session store
+        let session_config = SessionConfig::new();
+        let session_store =
+            SessionStore::<SessionRedisPool>::new(Some(redis.into()), session_config);
 
         // Build an email client
         let timeout = configuration.email_client.timeout();
@@ -63,7 +68,7 @@ impl Application {
             email_client,
             configuration.application.base_url,
             configuration.application.hmac_secret,
-            configuration.redis.uri,
+            session_store,
         );
         Ok(Self { port, server })
     }
@@ -90,7 +95,7 @@ pub fn run(
     email_client: EmailClient,
     base_url: String,
     hmac_secret: Secret<String>,
-    _redis_uri: Secret<String>,
+    session_store: SessionStore<SessionRedisPool>,
 ) -> AppServer {
     // Build app state
     let app_state = AppState {
@@ -98,6 +103,7 @@ pub fn run(
         email_client: Arc::new(email_client),
         base_url: ApplicationBaseUrl(base_url),
         flash_config: axum_flash::Config::new(Key::from(hmac_secret.expose_secret().as_bytes())),
+        session_store,
     };
 
     // Create a router that will contain and match all routes for the application
@@ -124,6 +130,7 @@ pub struct AppState {
     email_client: Arc<EmailClient>,
     base_url: ApplicationBaseUrl,
     flash_config: axum_flash::Config,
+    session_store: SessionStore<SessionRedisPool>,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -147,6 +154,12 @@ impl FromRef<AppState> for ApplicationBaseUrl {
 impl FromRef<AppState> for axum_flash::Config {
     fn from_ref(app_state: &AppState) -> axum_flash::Config {
         app_state.flash_config.clone()
+    }
+}
+
+impl FromRef<AppState> for SessionStore<SessionRedisPool> {
+    fn from_ref(app_state: &AppState) -> SessionStore<SessionRedisPool> {
+        app_state.session_store.clone()
     }
 }
 
