@@ -3,8 +3,10 @@ use axum::{
     extract::State,
     response::{IntoResponse, Redirect},
 };
+use axum_extra::response::Html;
 use axum_macros::debug_handler;
 use axum_session::SessionRedisPool;
+use http::StatusCode;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -29,8 +31,10 @@ pub async fn admin_dashboard(
         return Ok(Redirect::to("/login").into_response());
     };
 
-    let response_body = format!(
-        r#"<!DOCTYPE html>
+    let response = Html((
+        StatusCode::OK,
+        format!(
+            r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -41,9 +45,9 @@ pub async fn admin_dashboard(
 </body>
 </html>
 "#
-    )
-    .into_response();
-    Ok(response_body)
+        ),
+    ));
+    Ok(response.into_response())
 }
 
 #[tracing::instrument(name = "Get username", skip(pool))]
