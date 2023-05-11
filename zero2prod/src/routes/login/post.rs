@@ -6,6 +6,7 @@ use axum::{
 
 use axum_flash::Flash;
 use axum_macros::debug_handler;
+use axum_session::{Session, SessionRedisPool};
 use http::StatusCode;
 use secrecy::Secret;
 use serde::Deserialize;
@@ -25,6 +26,7 @@ use crate::{
 pub async fn login(
     State(pool): State<PgPool>,
     flash: Flash,
+    session: Session<SessionRedisPool>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -37,6 +39,7 @@ pub async fn login(
     let response = match validate_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
+            session.set("user_id", user_id);
             Redirect::to("/admin/dashboard").into_response()
         }
         Err(e) => {
