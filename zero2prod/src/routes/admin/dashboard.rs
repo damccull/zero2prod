@@ -1,11 +1,11 @@
 use anyhow::Context;
 use axum::{extract::State, response::IntoResponse};
 use axum_macros::debug_handler;
-use axum_session::{Session, SessionRedisPool};
+use axum_session::SessionRedisPool;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::error::ResponseInternalServerError;
+use crate::{error::ResponseInternalServerError, session_state::TypedSession};
 
 fn e500<T>(e: T) -> ResponseInternalServerError<T>
 where
@@ -18,9 +18,9 @@ where
 #[tracing::instrument(name = "Admin Dashboard", skip(pool, session))]
 pub async fn admin_dashboard(
     State(pool): State<PgPool>,
-    session: Session<SessionRedisPool>,
+    session: TypedSession<SessionRedisPool>,
 ) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
-    let username = if let Some(user_id) = session.get::<Uuid>("user_id") {
+    let username = if let Some(user_id) = session.get_user_id() {
         get_username(user_id, &pool).await.map_err(e500)?
     } else {
         todo!()

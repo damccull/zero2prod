@@ -6,7 +6,7 @@ use axum::{
 
 use axum_flash::Flash;
 use axum_macros::debug_handler;
-use axum_session::{Session, SessionRedisPool};
+use axum_session::SessionRedisPool;
 use http::StatusCode;
 use secrecy::Secret;
 use serde::Deserialize;
@@ -15,6 +15,7 @@ use sqlx::PgPool;
 use crate::{
     authentication::{validate_credentials, AuthError, Credentials},
     error_chain_fmt,
+    session_state::TypedSession,
 };
 
 #[debug_handler(state = crate::startup::AppState)]
@@ -26,7 +27,7 @@ use crate::{
 pub async fn login(
     State(pool): State<PgPool>,
     flash: Flash,
-    session: Session<SessionRedisPool>,
+    session: TypedSession<SessionRedisPool>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, LoginError> {
     let credentials = Credentials {
@@ -41,7 +42,7 @@ pub async fn login(
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
             // In actix_web, it would be necessary to handle serialization failure here. Somehow axum gets around that.
             session.renew();
-            session.set("user_id", user_id);
+            session.insert_user_id(user_id);
             Redirect::to("/admin/dashboard").into_response()
         }
         Err(e) => {
