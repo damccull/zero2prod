@@ -181,6 +181,18 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    /// Send a get request to the admin dashboard endpoint.
+    pub async fn get_admin_dashboard(&self) -> String {
+        self.api_client
+            .get(&format!("{}/admin/dashboard", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request")
+            .text()
+            .await
+            .unwrap()
+    }
+
     /// Send a get request to the login endpoint.
     pub async fn get_login_html(&self) -> String {
         self.api_client
