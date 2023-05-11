@@ -107,15 +107,15 @@ pub fn run(
 
     // Create a router that will contain and match all routes for the application
     let app = Router::new()
-        .route("/health_check", get(health_check))
         .route("/subscriptions", post(subscribe))
         .route("/subscriptions/confirm", get(confirm))
         .route("/newsletters", post(publish_newsletter))
         .route("/", get(home))
         .route("/login", get(login_form))
         .route("/login", post(login))
-        .add_axum_tracing_layer()
         .layer(SessionLayer::new(session_store))
+        .route("/health_check", get(health_check))
+        .add_axum_tracing_layer()
         .with_state(app_state);
 
     // Start the axum server and set up to use supplied listener
