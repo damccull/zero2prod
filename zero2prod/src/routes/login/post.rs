@@ -40,6 +40,7 @@ pub async fn login(
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
             // In actix_web, it would be necessary to handle serialization failure here. Somehow axum gets around that.
+            session.renew();
             session.set("user_id", user_id);
             Redirect::to("/admin/dashboard").into_response()
         }
