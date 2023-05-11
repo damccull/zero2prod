@@ -114,6 +114,7 @@ pub fn run(
         .route("/login", get(login_form))
         .route("/login", post(login))
         .layer(SessionLayer::new(session_store))
+        // health_check route is after session layer to prevent it getting session support.
         .route("/health_check", get(health_check))
         .add_axum_tracing_layer()
         .with_state(app_state);
