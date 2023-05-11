@@ -182,15 +182,17 @@ impl TestApp {
     }
 
     /// Send a get request to the admin dashboard endpoint.
-    pub async fn get_admin_dashboard(&self) -> String {
+    pub async fn get_admin_dashboard(&self) -> reqwest::Response {
         self.api_client
             .get(&format!("{}/admin/dashboard", &self.address))
             .send()
             .await
             .expect("Failed to execute request")
-            .text()
-            .await
-            .unwrap()
+    }
+
+    /// Return the html from the admin dashboard
+    pub async fn get_admin_dashboard_html(&self) -> String {
+        self.get_admin_dashboard().await.text().await.unwrap()
     }
 
     /// Send a get request to the login endpoint.
