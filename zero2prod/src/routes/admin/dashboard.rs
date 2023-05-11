@@ -1,5 +1,8 @@
 use anyhow::Context;
-use axum::{extract::State, response::IntoResponse};
+use axum::{
+    extract::State,
+    response::{IntoResponse, Redirect},
+};
 use axum_macros::debug_handler;
 use axum_session::SessionRedisPool;
 use sqlx::PgPool;
@@ -23,7 +26,7 @@ pub async fn admin_dashboard(
     let username = if let Some(user_id) = session.get_user_id() {
         get_username(user_id, &pool).await.map_err(e500)?
     } else {
-        todo!()
+        return Ok(Redirect::to("/login").into_response());
     };
 
     let response_body = format!(
