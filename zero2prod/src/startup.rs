@@ -13,7 +13,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
     configuration::{DatabaseSettings, Settings},
-    routes::{confirm, home, login, login_form, publish_newsletter},
+    routes::{admin_dashboard, confirm, home, login, login_form, publish_newsletter},
     telemetry::RouterExt,
 };
 use crate::{
@@ -107,12 +107,13 @@ pub fn run(
 
     // Create a router that will contain and match all routes for the application
     let app = Router::new()
+        .route("/", get(home))
         .route("/subscriptions", post(subscribe))
         .route("/subscriptions/confirm", get(confirm))
         .route("/newsletters", post(publish_newsletter))
-        .route("/", get(home))
         .route("/login", get(login_form))
         .route("/login", post(login))
+        .route("/admin/dashboard", get(admin_dashboard))
         .layer(SessionLayer::new(session_store))
         // health_check route is after session layer to prevent it getting session support.
         .route("/health_check", get(health_check))
