@@ -37,7 +37,7 @@ pub async fn login(
     let response = match validate_credentials(credentials, &pool).await {
         Ok(user_id) => {
             tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
-            Redirect::to("/").into_response()
+            Redirect::to("/admin/dashboard").into_response()
         }
         Err(e) => {
             let e = match e {
