@@ -10,14 +10,7 @@ use http::StatusCode;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{error::ResponseInternalServerError, session_state::TypedSession};
-
-fn e500<T>(e: T) -> ResponseInternalServerError<T>
-where
-    T: std::fmt::Debug + std::fmt::Display + 'static,
-{
-    ResponseInternalServerError::from(e)
-}
+use crate::{e500, error::ResponseInternalServerError, session_state::TypedSession};
 
 #[debug_handler]
 #[tracing::instrument(name = "Admin Dashboard", skip(pool, session))]

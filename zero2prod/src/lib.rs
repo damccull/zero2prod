@@ -1,3 +1,5 @@
+use error::ResponseInternalServerError;
+
 pub mod authentication;
 pub mod configuration;
 pub mod domain;
@@ -19,4 +21,11 @@ pub fn error_chain_fmt(
         current = cause.source();
     }
     Ok(())
+}
+
+pub fn e500<T>(e: T) -> ResponseInternalServerError<T>
+where
+    T: std::fmt::Debug + std::fmt::Display + 'static,
+{
+    ResponseInternalServerError::from(e)
 }
