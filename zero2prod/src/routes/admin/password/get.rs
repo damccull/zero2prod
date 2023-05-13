@@ -1,11 +1,17 @@
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Redirect};
 use axum_extra::response::Html;
+use axum_session::SessionRedisPool;
 use http::StatusCode;
 
-use crate::error::ResponseInternalServerError;
+use crate::{error::ResponseInternalServerError, session_state::TypedSession};
 
+#[tracing::instrument("Change password form" skip(session))]
 pub async fn change_password_form(
+    session: TypedSession<SessionRedisPool>,
 ) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
+    if session.get_user_id().is_none() {
+        return Ok(Redirect::to("/login").into_response());
+    }
     let body = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,5 +37,5 @@ pub async fn change_password_form(
 </body>
 </html>"#;
 
-    Ok(Html((StatusCode::OK, body)))
+    Ok(Html((StatusCode::OK, body)).into_response())
 }
