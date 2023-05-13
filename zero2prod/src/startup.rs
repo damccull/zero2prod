@@ -13,7 +13,10 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
     configuration::{DatabaseSettings, Settings},
-    routes::{admin_dashboard, confirm, home, login, login_form, publish_newsletter},
+    routes::{
+        admin_dashboard, change_password, change_password_form, confirm, home, login, login_form,
+        publish_newsletter,
+    },
     telemetry::RouterExt,
 };
 use crate::{
@@ -114,6 +117,8 @@ pub fn run(
         .route("/login", get(login_form))
         .route("/login", post(login))
         .route("/admin/dashboard", get(admin_dashboard))
+        .route("/admin/password", get(change_password_form))
+        .route("/admin/password", post(change_password))
         .layer(SessionLayer::new(session_store))
         // health_check route is after session layer to prevent it getting session support.
         .route("/health_check", get(health_check))
