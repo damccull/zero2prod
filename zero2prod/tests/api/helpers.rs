@@ -169,6 +169,11 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
+    /// Returns the HTML from a password change request
+    pub async fn get_change_password_html(&self) -> String {
+        self.get_change_password().await.text().await.unwrap()
+    }
+
     /// Get the confirmation links from the mock email.
     pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
         let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
