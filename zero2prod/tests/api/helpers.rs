@@ -146,41 +146,6 @@ pub struct TestApp {
 }
 
 impl TestApp {
-    /// Send a post request to the subscriptions endpoint.
-    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/subscriptions", &self.address))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(body)
-            .send()
-            .await
-            .expect("failed to execute request")
-    }
-
-    /// Send a post request to the newsletters endpoint.
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
-            .send()
-            .await
-            .expect("Failed to execute request.")
-    }
-
-    /// Send a post request to the login endpoint.
-    pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
-    where
-        Body: serde::Serialize,
-    {
-        self.api_client
-            .post(&format!("{}/login", &self.address))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to execute request.")
-    }
-
     /// Send a get request to the admin dashboard endpoint.
     pub async fn get_admin_dashboard(&self) -> reqwest::Response {
         self.api_client
@@ -195,16 +160,13 @@ impl TestApp {
         self.get_admin_dashboard().await.text().await.unwrap()
     }
 
-    /// Send a get request to the login endpoint.
-    pub async fn get_login_html(&self) -> String {
+    /// Send a get request to the change admin password endpoint
+    pub async fn get_change_password(&self) -> reqwest::Response {
         self.api_client
-            .get(&format!("{}/login", &self.address))
+            .get(&format!("{}/admin/password", &self.address))
             .send()
             .await
-            .expect("Failed to execute request")
-            .text()
-            .await
-            .unwrap()
+            .expect("Failed to execute request.")
     }
 
     /// Get the confirmation links from the mock email.
@@ -235,6 +197,66 @@ impl TestApp {
         let plain_text = get_link(body["TextBody"].as_str().unwrap());
 
         ConfirmationLinks { html, plain_text }
+    }
+
+    /// Send a get request to the login endpoint.
+    pub async fn get_login_html(&self) -> String {
+        self.api_client
+            .get(&format!("{}/login", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request")
+            .text()
+            .await
+            .unwrap()
+    }
+
+    /// Send a post request to the change admin password endpoint
+    pub async fn post_change_password<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/password", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    /// Send a post request to the login endpoint.
+    pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/login", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    /// Send a post request to the newsletters endpoint.
+    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/newsletters", &self.address))
+            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
+            .json(&body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    /// Send a post request to the subscriptions endpoint.
+    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/subscriptions", &self.address))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(body)
+            .send()
+            .await
+            .expect("failed to execute request")
     }
 }
 
