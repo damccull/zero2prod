@@ -27,6 +27,7 @@ pub async fn change_password(
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct FormData {
     current_password: Secret<String>,
     new_password: Secret<String>,
