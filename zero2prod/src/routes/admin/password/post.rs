@@ -32,6 +32,13 @@ pub async fn change_password(
 
     let user_id = user_id.unwrap(); // Can't panic; we already know it's not `None`.
 
+    // Ensure the new password is the correct length
+    if form.new_password.expose_secret().len() < 12 || form.new_password.expose_secret().len() > 128
+    {
+        let flash = flash.error("The new password should be between 8 and 128 characters long.");
+        return Ok((flash, Redirect::to("/admin/password")).into_response());
+    }
+
     // Ensure the new password and confirmation match
     if form.new_password.expose_secret() != form.new_password_check.expose_secret() {
         let flash =
