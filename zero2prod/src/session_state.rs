@@ -19,6 +19,10 @@ where
         self.0.set(Self::USER_ID_KEY, user_id)
     }
 
+    pub fn log_out(self) {
+        self.0.destroy();
+    }
+
     pub fn renew(&self) {
         self.0.renew();
     }
