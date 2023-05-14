@@ -11,16 +11,16 @@ where
 {
     const USER_ID_KEY: &'static str = "user_id";
 
-    pub fn renew(&self) {
-        self.0.renew();
+    pub fn get_user_id(&self) -> Option<Uuid> {
+        self.0.get(Self::USER_ID_KEY)
     }
 
     pub fn insert_user_id(&self, user_id: Uuid) {
         self.0.set(Self::USER_ID_KEY, user_id)
     }
 
-    pub fn get_user_id(&self) -> Option<Uuid> {
-        self.0.get(Self::USER_ID_KEY)
+    pub fn renew(&self) {
+        self.0.renew();
     }
 }
 
