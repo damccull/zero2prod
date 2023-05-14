@@ -1,5 +1,18 @@
 {
   "db": "PostgreSQL",
+  "2505b5f942a7bc360ca9fecb14ce8100a721d692b4ace8c7e11cf81d169c8d52": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n    UPDATE users\n    SET password_hash = $1\n    WHERE user_id = $2\n    "
+  },
   "33b11051e779866db9aeb86d28a59db07a94323ffdc59a5a2c1da694ebe9a65f": {
     "describe": {
       "columns": [
