@@ -131,7 +131,9 @@ async fn new_password_must_be_correct_length() {
         let html_page = app.get_change_password_html().await;
 
         // Assert - Part 3
-        assert!(html_page.contains("The new password should be between 8 and 128 characters long."));
+        assert!(
+            html_page.contains("The new password should be between 12 and 128 characters long.")
+        );
     }
 }
 
