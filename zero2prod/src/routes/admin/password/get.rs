@@ -1,21 +1,16 @@
-use axum::response::{IntoResponse, Redirect};
+use axum::response::IntoResponse;
 use axum_extra::response::Html;
 use axum_flash::{IncomingFlashes, Level};
-use axum_session::SessionRedisPool;
+
 use http::StatusCode;
 use std::fmt::Write;
 
-use crate::{error::ResponseInternalServerError, session_state::TypedSession};
+use crate::error::ResponseInternalServerError;
 
-#[tracing::instrument("Change password form" skip(session))]
+#[tracing::instrument("Change password form")]
 pub async fn change_password_form(
     flashes: IncomingFlashes,
-    session: TypedSession<SessionRedisPool>,
 ) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
-    if session.get_user_id().is_none() {
-        return Ok(Redirect::to("/login").into_response());
-    }
-
     let mut msg_html = String::new();
     for (level, text) in flashes.iter().filter(|m| m.0 == Level::Error) {
         writeln!(

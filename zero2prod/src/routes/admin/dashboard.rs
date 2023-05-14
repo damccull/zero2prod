@@ -1,28 +1,21 @@
 use anyhow::Context;
-use axum::{
-    extract::State,
-    response::{IntoResponse, Redirect},
-};
+use axum::{extract::State, response::IntoResponse, Extension};
 use axum_extra::response::Html;
 use axum_macros::debug_handler;
-use axum_session::SessionRedisPool;
+
 use http::StatusCode;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{e500, error::ResponseInternalServerError, session_state::TypedSession};
+use crate::{authentication::UserId, e500, error::ResponseInternalServerError};
 
 #[debug_handler]
-#[tracing::instrument(name = "Admin Dashboard", skip(pool, session))]
+#[tracing::instrument(name = "Admin Dashboard", skip(pool, user_id))]
 pub async fn admin_dashboard(
+    Extension(user_id): Extension<UserId>,
     State(pool): State<PgPool>,
-    session: TypedSession<SessionRedisPool>,
 ) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
-    let username = if let Some(user_id) = session.get_user_id() {
-        get_username(user_id, &pool).await.map_err(e500)?
-    } else {
-        return Ok(Redirect::to("/login").into_response());
-    };
+    let username = get_username(*user_id, &pool).await.map_err(e500)?;
 
     let response = Html((
         StatusCode::OK,

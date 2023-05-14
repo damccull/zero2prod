@@ -1,37 +1,27 @@
 use axum::{
     extract::State,
     response::{IntoResponse, Redirect},
-    Form,
+    Extension, Form,
 };
 use axum_flash::Flash;
-use axum_session::SessionRedisPool;
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::{
-    authentication::{validate_credentials, AuthError, Credentials},
+    authentication::{validate_credentials, AuthError, Credentials, UserId},
     e500,
     error::ResponseInternalServerError,
     routes::admin::dashboard::get_username,
-    session_state::TypedSession,
 };
 
-#[tracing::instrument(name = "Change password", skip(session, form))]
+#[tracing::instrument(name = "Change password", skip(user_id, form))]
 pub async fn change_password(
     flash: Flash,
-    session: TypedSession<SessionRedisPool>,
+    Extension(user_id): Extension<UserId>,
     State(pool): State<PgPool>,
     Form(form): Form<FormData>,
 ) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
-    let user_id = session.get_user_id();
-    // Ensure the user is logged in
-    if user_id.is_none() {
-        return Ok(Redirect::to("/login").into_response());
-    }
-
-    let user_id = user_id.unwrap(); // Can't panic; we already know it's not `None`.
-
     // Ensure the new password is the correct length
     if form.new_password.expose_secret().len() < 12 || form.new_password.expose_secret().len() > 128
     {
@@ -47,7 +37,7 @@ pub async fn change_password(
     }
 
     // Ensure the old/current password is valid
-    let username = get_username(user_id, &pool).await.map_err(e500)?;
+    let username = get_username(*user_id, &pool).await.map_err(e500)?;
 
     let credentials = Credentials {
         username,
@@ -64,7 +54,7 @@ pub async fn change_password(
         };
     }
 
-    crate::authentication::change_password(user_id, form.new_password, &pool)
+    crate::authentication::change_password(*user_id, form.new_password, &pool)
         .await
         .map_err(e500)?;
 
