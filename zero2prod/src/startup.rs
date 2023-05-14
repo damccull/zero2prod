@@ -2,6 +2,7 @@ use std::{net::TcpListener, sync::Arc};
 
 use axum::{
     extract::FromRef,
+    middleware,
     routing::{get, post, IntoMakeService},
     Router, Server,
 };
@@ -12,6 +13,7 @@ use secrecy::{ExposeSecret, Secret};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 use crate::{
+    authentication::reject_anonymous_users,
     configuration::{DatabaseSettings, Settings},
     routes::{
         admin_dashboard, change_password, change_password_form, confirm, home, log_out, login,
@@ -108,21 +110,32 @@ pub fn run(
         flash_config: axum_flash::Config::new(Key::from(hmac_secret.expose_secret().as_bytes())),
     };
 
-    // Create a router that will contain and match all routes for the application
-    let app = Router::new()
+    // Routes that need to not have a session applied
+    let router_no_session = Router::new().route("/health_check", get(health_check));
+
+    // All admin section routes
+    let router_for_admin_section = Router::new()
+        .route("/admin/dashboard", get(admin_dashboard))
+        .route("/admin/password", get(change_password_form))
+        .route("/admin/password", post(change_password))
+        .route("/admin/logout", post(log_out))
+        .layer(middleware::from_fn(reject_anonymous_users));
+
+    // All routes that should be a care about session
+    let router_with_session = Router::new()
         .route("/", get(home))
         .route("/login", get(login_form))
         .route("/login", post(login))
         .route("/newsletters", post(publish_newsletter))
         .route("/subscriptions", post(subscribe))
         .route("/subscriptions/confirm", get(confirm))
-        .route("/admin/dashboard", get(admin_dashboard))
-        .route("/admin/password", get(change_password_form))
-        .route("/admin/password", post(change_password))
-        .route("/admin/logout", post(log_out))
-        .layer(SessionLayer::new(session_store))
-        // health_check route is after session layer to prevent it getting session support.
-        .route("/health_check", get(health_check))
+        .merge(router_for_admin_section)
+        .layer(SessionLayer::new(session_store));
+
+    // Create a router that will contain and match all routes for the application
+    let app = Router::new()
+        .merge(router_no_session)
+        .merge(router_with_session)
         .add_axum_tracing_layer()
         .with_state(app_state);
 
