@@ -11,5 +11,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Application::build(configuration).await?;
     app.run_until_stopped().await?;
+
     Ok(())
 }
