@@ -17,7 +17,7 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         admin_dashboard, change_password, change_password_form, confirm, home, log_out, login,
-        login_form, publish_newsletter,
+        login_form, newsletters_publish_form, publish_newsletter,
     },
     telemetry::RouterExt,
 };
@@ -116,6 +116,7 @@ pub fn run(
     // All admin section routes
     let router_for_admin_section = Router::new()
         .route("/admin/dashboard", get(admin_dashboard))
+        .route("/admin/newsletters", get(newsletters_publish_form))
         .route("/admin/password", get(change_password_form))
         .route("/admin/password", post(change_password))
         .route("/admin/logout", post(log_out))
