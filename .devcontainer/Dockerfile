@@ -19,7 +19,7 @@ ENV HOME /home/vscode
 
 # Install cargo-binstall
 #RUN mkdir -p /usr/local/cargo/bin
-RUN set -o pipefail && wget -qO - "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz" | tar zxvf - -C /usr/local/cargo/bin
+RUN wget -qO - "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz" | tar zxvf - -C /usr/local/cargo/bin
 # Install some cargo tools
 RUN cargo binstall -y cargo-deny
 RUN cargo binstall -y cargo-edit
