@@ -86,7 +86,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     let response = app.post_newsletters(newsletter_request_body).await;
 
     // Assert
-    assert_eq!(response.status().as_u16(), 200);
+    assert_eq!(200, response.status().as_u16());
 }
 
 #[tokio::test]
@@ -114,7 +114,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     let response = app.post_newsletters(newsletter_request_body).await;
 
     // Assert
-    assert_eq!(response.status().as_u16(), 200);
+    assert_eq!(200, response.status().as_u16());
 }
 
 #[tokio::test]
@@ -144,8 +144,8 @@ async fn newsletters_returns_422_for_invalid_data() {
         let response = app.post_newsletters(invalid_body).await;
         // Assert
         assert_eq!(
-            response.status().as_u16(),
             422,
+            response.status().as_u16(),
             "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
             error_message
         );
@@ -171,7 +171,7 @@ async fn requests_missing_authorization_are_rejected() {
         .expect("Failed to execute request.");
 
     // Assert
-    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(401, response.status().as_u16());
     assert_eq!(
         r#"Basic realm="publish""#,
         response.headers()["WWW-Authenticate"]
@@ -217,7 +217,7 @@ async fn invalid_password_is_rejected() {
     let username = &app.test_user.username;
     // Random password
     let password = Uuid::new_v4().to_string();
-    assert_ne!(app.test_user.password, password);
+    assert_ne!(password, app.test_user.password);
 
     // Act
     let response = reqwest::Client::new()
