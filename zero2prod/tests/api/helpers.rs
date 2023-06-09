@@ -5,6 +5,7 @@ use uuid::Uuid;
 use wiremock::MockServer;
 use zero2prod::{
     configuration::{get_configuration, DatabaseSettings},
+    routes::newsletters::BodyData,
     startup::{get_db_pool, Application},
     telemetry::{get_subscriber, init_subscriber},
 };
@@ -252,11 +253,14 @@ impl TestApp {
     }
 
     /// Send a post request to the newsletters endpoint.
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+    pub async fn post_newsletters<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
         self.api_client
-            .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
+            .post(&format!("{}/admin/newsletters", &self.address))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .form(&body)
             .send()
             .await
             .expect("Failed to execute request.")
