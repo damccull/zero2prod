@@ -1,8 +1,12 @@
 use anyhow::Context;
-use axum::{extract::State, response::IntoResponse, Extension, Form};
+use axum::{
+    extract::State,
+    response::{IntoResponse, Redirect},
+    Extension, Form,
+};
 use axum_extra::extract::WithRejection;
+use axum_flash::Flash;
 use axum_macros::debug_handler;
-use http::StatusCode;
 use sqlx::PgPool;
 use std::sync::Arc;
 
@@ -19,10 +23,11 @@ use newsletter_types::*;
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
 #[tracing::instrument(
     name = "Publish a newsletter",
-    skip(db_pool, email_client,  body),
+    skip(flash, db_pool, email_client,  body),
     fields(username=tracing::field::Empty, user_id=tracing::field::Empty)
 )]
 pub async fn publish_newsletter(
+    flash: Flash,
     Extension(user_id): Extension<UserId>,
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
@@ -53,8 +58,9 @@ pub async fn publish_newsletter(
             }
         }
     }
-    Ok(StatusCode::OK)
-    //TODO: Redirect back to admin dashboard and flash successful message
+    let flash = flash.info("Successfully sent newsletter");
+
+    Ok((flash, Redirect::to("/admin/newsletters")).into_response())
 }
 
 #[tracing::instrument(name = "Get confirmed subscribers", skip(db_pool))]

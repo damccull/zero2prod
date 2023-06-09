@@ -5,7 +5,6 @@ use uuid::Uuid;
 use wiremock::MockServer;
 use zero2prod::{
     configuration::{get_configuration, DatabaseSettings},
-    routes::newsletters::BodyData,
     startup::{get_db_pool, Application},
     telemetry::{get_subscriber, init_subscriber},
 };
@@ -215,6 +214,20 @@ impl TestApp {
             .text()
             .await
             .unwrap()
+    }
+
+    /// Send a get request to the admin dashboard endpoint.
+    pub async fn get_admin_newsletters(&self) -> reqwest::Response {
+        self.api_client
+            .get(&format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request")
+    }
+
+    /// Return the html from the admin dashboard
+    pub async fn get_admin_newsletters_html(&self) -> String {
+        self.get_admin_newsletters().await.text().await.unwrap()
     }
 
     /// Send a post request to the change admin password endpoint

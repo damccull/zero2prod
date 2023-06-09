@@ -120,10 +120,12 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 
     let response = app.post_newsletters(&body).await;
 
-    assert_is_redirect_to(&response, "/admin/dashboard");
+    assert_is_redirect_to(&response, "/admin/newsletters");
 
-    // Assert
-    assert_eq!(200, response.status().as_u16());
+    // Act - Part 3 - Follow the redirect
+    let html = app.get_admin_newsletters_html().await;
+
+    assert!(html.contains("Successfully sent newsletter"));
 }
 
 #[tokio::test]
