@@ -54,6 +54,7 @@ pub async fn publish_newsletter(
         }
     }
     Ok(StatusCode::OK)
+    //TODO: Redirect back to admin dashboard and flash successful message
 }
 
 #[tracing::instrument(name = "Get confirmed subscribers", skip(db_pool))]
