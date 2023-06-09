@@ -9,10 +9,9 @@ use serde::Deserialize;
 use sqlx::PgPool;
 
 use crate::{
-    authentication::{validate_credentials, AuthError, Credentials, UserId},
+    authentication::{get_username, validate_credentials, AuthError, Credentials, UserId},
     e500,
     error::ResponseInternalServerError,
-    routes::admin::dashboard::get_username,
 };
 
 #[tracing::instrument(name = "Change password", skip(user_id, form))]

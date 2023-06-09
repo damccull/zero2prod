@@ -1,13 +1,14 @@
-use anyhow::Context;
 use axum::{extract::State, response::IntoResponse, Extension};
 use axum_extra::response::Html;
 use axum_macros::debug_handler;
-
 use http::StatusCode;
 use sqlx::PgPool;
-use uuid::Uuid;
 
-use crate::{authentication::UserId, e500, error::ResponseInternalServerError};
+use crate::{
+    authentication::{get_username, UserId},
+    e500,
+    error::ResponseInternalServerError,
+};
 
 #[debug_handler]
 #[tracing::instrument(name = "Admin Dashboard", skip(pool, user_id))]
@@ -44,20 +45,4 @@ pub async fn admin_dashboard(
         ),
     ));
     Ok(response.into_response())
-}
-
-#[tracing::instrument(name = "Get username", skip(pool))]
-pub async fn get_username(user_id: Uuid, pool: &PgPool) -> Result<String, anyhow::Error> {
-    let row = sqlx::query!(
-        r#"
-        SELECT username
-        FROM users
-        WHERE user_id = $1
-        "#,
-        user_id
-    )
-    .fetch_one(pool)
-    .await
-    .context("Failed to perform a query to retrieve a username.")?;
-    Ok(row.username)
 }
