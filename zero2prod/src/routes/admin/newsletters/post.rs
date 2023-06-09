@@ -33,6 +33,9 @@ pub async fn publish_newsletter(
     State(email_client): State<Arc<EmailClient>>,
     WithRejection(Form(body), _): WithRejection<Form<BodyData>, PublishError>,
 ) -> Result<impl IntoResponse, PublishError> {
+    //TODO: Look at the WithRejection for Form and see if I need to build a custom rejection
+    //that will let me send flash messages and redirect, or if I can configure form to do that
+
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let username = get_username(*user_id, &db_pool).await;
     if let Ok(username) = username {
