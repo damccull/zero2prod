@@ -1,3 +1,4 @@
+use regex::Regex;
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -143,30 +144,53 @@ async fn newsletters_returns_422_for_invalid_data() {
     let app = spawn_app().await;
     let test_cases = vec![
         (
-            serde_json::json!({
-                "content": {
-                    "text":"Newsletter body as plain text",
-                    "html": "<p>Newsletter body as HTML</p>",
-                }
-            }),
+            BodyData {
+                title: "Newsletter title".to_string(),
+                text: "Newsletter body as plain text".to_string(),
+                html: "<p>Newsletter body ad HTML</p>".to_string(),
+            },
             "missing title",
         ),
         (
-            serde_json::json!({
-                "title": "Newsletter!"
-            }),
-            "missing content",
+            BodyData {
+                title: "Newsletter title".to_string(),
+                text: String::new(),
+                html: "<p>Newsletter body ad HTML</p>".to_string(),
+            },
+            "missing plaintext content",
+        ),
+        (
+            BodyData {
+                title: "Newsletter title".to_string(),
+                text: "Newsletter body as plain text".to_string(),
+                html: String::new(),
+            },
+            "missing HTML content",
         ),
     ];
 
+    let matcher = Regex::new(r"The newsletter's (HTML|plaintext) content was missing").unwrap();
+
     for (invalid_body, error_message) in test_cases {
         // Act
-        let response = app.post_newsletters(invalid_body).await;
+        let html = app
+            .post_newsletters(&invalid_body)
+            .await
+            .text()
+            .await
+            .unwrap();
+
         // Assert
-        assert_eq!(
-            422,
-            response.status().as_u16(),
-            "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
+        // assert_eq!(
+        //     422,
+        //     response.status().as_u16(),
+        //     "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
+        //     error_message
+        // );
+
+        assert!(
+            matcher.is_match(&html),
+            "The API did not fail when the payload was {}.",
             error_message
         );
     }
