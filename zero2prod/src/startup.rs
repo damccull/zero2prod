@@ -17,7 +17,8 @@ use crate::{
     configuration::{DatabaseSettings, Settings},
     routes::{
         admin_dashboard, change_password, change_password_form, confirm, home, log_out, login,
-        login_form, newsletters_publish_form, publish_newsletter,
+        login_form,
+        newsletters::{newsletters_publish_form, publish_newsletter},
     },
     telemetry::RouterExt,
 };
