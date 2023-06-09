@@ -1,9 +1,9 @@
-use regex::Regex;
+use std::collections::HashMap;
+
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
 };
-use zero2prod::routes::newsletters::BodyData;
 
 use crate::{helpers::spawn_app, login::assert_is_redirect_to};
 
@@ -83,13 +83,21 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
-    let body = BodyData {
-        title: "Newsletter title".to_string(),
-        text: "Newsletter body as plain text".to_string(),
-        html: "<p>Newsletter body ad HTML</p>".to_string(),
-    };
+    let body = {
+        let mut params = HashMap::new();
 
-    let response = app.post_newsletters(&body).await;
+        params.insert("title".to_string(), "Newsletter title".to_string());
+        params.insert(
+            "text_content".to_string(),
+            "Newsletter body as plain text".to_string(),
+        );
+        params.insert(
+            "html_content".to_string(),
+            "<p>Newsletter body ad HTML</p>".to_string(),
+        );
+        params
+    };
+    let response = app.post_newsletters(body).await;
 
     assert_is_redirect_to(&response, "/admin/newsletters");
 
@@ -122,13 +130,22 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
-    let body = BodyData {
-        title: "Newsletter title".to_string(),
-        text: "Newsletter body as plain text".to_string(),
-        html: "<p>Newsletter body ad HTML</p>".to_string(),
+    let body = {
+        let mut params = HashMap::new();
+
+        params.insert("title".to_string(), "Newsletter title".to_string());
+        params.insert(
+            "text_content".to_string(),
+            "Newsletter body as plain text".to_string(),
+        );
+        params.insert(
+            "html_content".to_string(),
+            "<p>Newsletter body ad HTML</p>".to_string(),
+        );
+        params
     };
 
-    let response = app.post_newsletters(&body).await;
+    let response = app.post_newsletters(body).await;
 
     assert_is_redirect_to(&response, "/admin/newsletters");
 
@@ -144,52 +161,68 @@ async fn newsletters_returns_422_for_invalid_data() {
     let app = spawn_app().await;
     let test_cases = vec![
         (
-            BodyData {
-                title: "Newsletter title".to_string(),
-                text: "Newsletter body as plain text".to_string(),
-                html: "<p>Newsletter body ad HTML</p>".to_string(),
+            {
+                let mut params = HashMap::new();
+                params.insert(
+                    "text_content".to_string(),
+                    "Newsletter body as plain text".to_string(),
+                );
+                params.insert(
+                    "html_content".to_string(),
+                    "<p>Newsletter body ad HTML</p>".to_string(),
+                );
+                params
             },
             "missing title",
         ),
         (
-            BodyData {
-                title: "Newsletter title".to_string(),
-                text: String::new(),
-                html: "<p>Newsletter body ad HTML</p>".to_string(),
+            {
+                let mut params = HashMap::new();
+                params.insert("title".to_string(), "Newsletter title".to_string());
+                params.insert(
+                    "html_content".to_string(),
+                    "<p>Newsletter body ad HTML</p>".to_string(),
+                );
+                params
             },
             "missing plaintext content",
         ),
         (
-            BodyData {
-                title: "Newsletter title".to_string(),
-                text: "Newsletter body as plain text".to_string(),
-                html: String::new(),
+            {
+                let mut params = HashMap::new();
+                params.insert("title".to_string(), "Newsletter title".to_string());
+                params.insert(
+                    "text_content".to_string(),
+                    "Newsletter body as plain text".to_string(),
+                );
+                params
             },
             "missing HTML content",
         ),
     ];
 
-    let matcher = Regex::new(r"The newsletter's (HTML|plaintext) content was missing").unwrap();
+    // let matcher = Regex::new(r"The newsletter's (HTML|plaintext) content was missing").unwrap();
+    // Act - Part 1 - Login
+    let login_body = serde_json::json!({
+        "username": &app.test_user.username,
+        "password": &app.test_user.password,
+    });
 
+    let response = app.post_login(&login_body).await;
+    assert_is_redirect_to(&response, "/admin/dashboard");
+
+    // Act - Part 2 - Post the newsletter cases
     for (invalid_body, error_message) in test_cases {
-        // Act
         let html = app
-            .post_newsletters(&invalid_body)
+            .post_newsletters(invalid_body)
             .await
             .text()
             .await
             .unwrap();
 
-        // Assert
-        // assert_eq!(
-        //     422,
-        //     response.status().as_u16(),
-        //     "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
-        //     error_message
-        // );
-
         assert!(
-            matcher.is_match(&html),
+            // matcher.is_match(&html),
+            html.contains("Part of the form is not filled out"),
             "The API did not fail when the payload was {}.",
             error_message
         );
@@ -200,13 +233,22 @@ async fn newsletters_returns_422_for_invalid_data() {
 async fn requests_missing_authorization_are_rejected() {
     // Arrange
     let app = spawn_app().await;
-    let body = BodyData {
-        title: "Newsletter title".to_string(),
-        text: "Newsletter body as plain text".to_string(),
-        html: "<p>Newsletter body ad HTML</p>".to_string(),
+    let body = {
+        let mut params = HashMap::new();
+
+        params.insert("title".to_string(), "Newsletter title".to_string());
+        params.insert(
+            "text_content".to_string(),
+            "Newsletter body as plain text".to_string(),
+        );
+        params.insert(
+            "html_content".to_string(),
+            "<p>Newsletter body ad HTML</p>".to_string(),
+        );
+        params
     };
 
-    let response = app.post_newsletters(&body).await;
+    let response = app.post_newsletters(body).await;
 
     // Assert
     assert_is_redirect_to(&response, "/login")

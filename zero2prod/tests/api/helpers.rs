@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
@@ -266,14 +268,11 @@ impl TestApp {
     }
 
     /// Send a post request to the newsletters endpoint.
-    pub async fn post_newsletters<Body>(&self, body: &Body) -> reqwest::Response
-    where
-        Body: serde::Serialize,
-    {
+    pub async fn post_newsletters(&self, params: HashMap<String, String>) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/admin/newsletters", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .form(&body)
+            .form(&params)
             .send()
             .await
             .expect("Failed to execute request.")

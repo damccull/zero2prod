@@ -1,10 +1,9 @@
 use anyhow::Context;
 use axum::{
-    extract::State,
+    extract::{rejection::FormRejection, State},
     response::{IntoResponse, Redirect},
     Extension, Form,
 };
-use axum_extra::extract::WithRejection;
 use axum_flash::Flash;
 use axum_macros::debug_handler;
 use sqlx::PgPool;
@@ -31,16 +30,24 @@ pub async fn publish_newsletter(
     Extension(user_id): Extension<UserId>,
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
-    WithRejection(Form(body), _): WithRejection<Form<BodyData>, PublishError>,
+    // WithRejection(Form(body), _): WithRejection<Form<BodyData>, PublishError>,
+    body: Result<Form<BodyData>, FormRejection>,
 ) -> Result<impl IntoResponse, PublishError> {
-    //TODO: Look at the WithRejection for Form and see if I need to build a custom rejection
-    //that will let me send flash messages and redirect, or if I can configure form to do that
-
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let username = get_username(*user_id, &db_pool).await;
     if let Ok(username) = username {
         tracing::Span::current().record("username", &tracing::field::display(username));
     }
+
+    let body = if let Ok(body) = body {
+        tracing::trace!("Successfully extracted form body");
+        body
+    } else {
+        tracing::trace!("Unable to extract form body: {:?}", body);
+        let flash = flash.error("Part of the form is not filled out");
+
+        return Ok((flash, Redirect::to("/admin/newsletters")).into_response());
+    };
 
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
@@ -50,8 +57,8 @@ pub async fn publish_newsletter(
                     .send_email(
                         &subscriber.email,
                         &body.title,
-                        &body.content.html,
-                        &body.content.text,
+                        &body.text_content,
+                        &body.html_content,
                     )
                     .await
                     .with_context(|| {
