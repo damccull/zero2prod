@@ -8,6 +8,6 @@ license = "MIT"
 
 [dependencies]
 anyhow = "1.0.71"
-chrono = { version = "0.4.24", default-features = false, features = ["clock"] }
+chrono = { version = "0.4.26", default-features = false, features = ["clock"] }
 man = "0.3.0"
 owo-colors = "3.5.0"
