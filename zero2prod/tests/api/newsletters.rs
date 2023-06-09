@@ -60,33 +60,42 @@ use newsletter_helpers::*;
 
 #[tokio::test]
 async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
-    // // Arrange
-    // let app = spawn_app().await;
-    // create_unconfirmed_subscriber(&app).await;
-    //
-    // Mock::given(any())
-    //     .respond_with(ResponseTemplate::new(200))
-    //     // Assert that no requests were sent to Postmark by checking for
-    //     // zero requests on the mock server
-    //     .expect(0)
-    //     .mount(&app.email_server)
-    //     .await;
-    //
-    // // Act
-    //
-    // // A sketch of the newsletter payload structure
-    // let newsletter_request_body = serde_json::json!({
-    //     "title":"Newsletter title",
-    //     "content": {
-    //         "text": "Newsletter body as plain text",
-    //         "html": "<p>Newsletter body as HTML</p>",
-    //     }
-    // });
-    //
-    // let response = app.post_newsletters(newsletter_request_body).await;
-    //
-    // // Assert
-    // assert_eq!(200, response.status().as_u16());
+    // Arrange
+    let app = spawn_app().await;
+    create_unconfirmed_subscriber(&app).await;
+
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(200))
+        // Assert that no requests were sent to Postmark by checking for
+        // zero requests on the mock server
+        .expect(0)
+        .mount(&app.email_server)
+        .await;
+
+    // Act - Part 1 - Login
+    let login_body = serde_json::json!({
+        "username": &app.test_user.username,
+        "password": &app.test_user.password,
+    });
+
+    let response = app.post_login(&login_body).await;
+    assert_is_redirect_to(&response, "/admin/dashboard");
+
+    // Act - Part 2 - Send Newsletter
+    let body = BodyData {
+        title: "Newsletter title".to_string(),
+        text: "Newsletter body as plain text".to_string(),
+        html: "<p>Newsletter body ad HTML</p>".to_string(),
+    };
+
+    let response = app.post_newsletters(&body).await;
+
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 3 - Follow the redirect
+    let html = app.get_admin_newsletters_html().await;
+
+    assert!(html.contains("Successfully sent newsletter"));
 }
 
 #[tokio::test]
