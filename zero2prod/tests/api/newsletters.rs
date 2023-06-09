@@ -139,37 +139,37 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 
 #[tokio::test]
 async fn newsletters_returns_422_for_invalid_data() {
-    // // Arrange
-    // let app = spawn_app().await;
-    // let test_cases = vec![
-    //     (
-    //         serde_json::json!({
-    //             "content": {
-    //                 "text":"Newsletter body as plain text",
-    //                 "html": "<p>Newsletter body as HTML</p>",
-    //             }
-    //         }),
-    //         "missing title",
-    //     ),
-    //     (
-    //         serde_json::json!({
-    //             "title": "Newsletter!"
-    //         }),
-    //         "missing content",
-    //     ),
-    // ];
-    //
-    // for (invalid_body, error_message) in test_cases {
-    //     // Act
-    //     let response = app.post_newsletters(invalid_body).await;
-    //     // Assert
-    //     assert_eq!(
-    //         422,
-    //         response.status().as_u16(),
-    //         "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
-    //         error_message
-    //     );
-    // }
+    // Arrange
+    let app = spawn_app().await;
+    let test_cases = vec![
+        (
+            serde_json::json!({
+                "content": {
+                    "text":"Newsletter body as plain text",
+                    "html": "<p>Newsletter body as HTML</p>",
+                }
+            }),
+            "missing title",
+        ),
+        (
+            serde_json::json!({
+                "title": "Newsletter!"
+            }),
+            "missing content",
+        ),
+    ];
+
+    for (invalid_body, error_message) in test_cases {
+        // Act
+        let response = app.post_newsletters(invalid_body).await;
+        // Assert
+        assert_eq!(
+            422,
+            response.status().as_u16(),
+            "The API did not fail with 422 Unprocessable Entity when the payload was {}.",
+            error_message
+        );
+    }
 }
 
 #[tokio::test]
