@@ -29,7 +29,7 @@ pub async fn newsletters_publish_form(
 </head>
 <body>
     {msg_html}
-    <form action="/newsletters" method="post">
+    <form action="/admin/newsletters" method="post" enctype="application/x-www-form-urlencoded">
         
         <label>Newsletter Title
             <input type="text" placeholder="Enter newsletter title" name="title">
