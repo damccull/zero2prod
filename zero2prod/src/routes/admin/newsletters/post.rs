@@ -13,7 +13,6 @@ use crate::{
     authentication::{get_username, UserId},
     domain::SubscriberEmail,
     email_client::EmailClient,
-    routes::newsletters::BodyData,
 };
 
 use newsletter_errors::*;
@@ -108,6 +107,13 @@ mod newsletter_types {
 
     pub(crate) struct ConfirmedSubscriber {
         pub(crate) email: SubscriberEmail,
+    }
+
+    #[derive(Debug, serde::Deserialize, serde::Serialize)]
+    pub struct BodyData {
+        pub title: String,
+        pub html_content: String,
+        pub text_content: String,
     }
 }
 
