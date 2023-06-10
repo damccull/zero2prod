@@ -5,6 +5,7 @@ use axum_macros::debug_handler;
 use http::StatusCode;
 use std::fmt::Write;
 
+#[allow(clippy::let_with_type_underscore)]
 #[debug_handler(state = axum_flash::Config)]
 #[tracing::instrument(name = "Login form", skip(flashes))]
 pub async fn login_form(flashes: IncomingFlashes) -> impl IntoResponse {
