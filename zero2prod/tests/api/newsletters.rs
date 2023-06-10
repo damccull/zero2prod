@@ -156,7 +156,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 }
 
 #[tokio::test]
-async fn newsletters_returns_422_for_invalid_data() {
+async fn newsletters_fails_for_invalid_data() {
     // Arrange
     let app = spawn_app().await;
     let test_cases = vec![
@@ -201,7 +201,6 @@ async fn newsletters_returns_422_for_invalid_data() {
         ),
     ];
 
-    // let matcher = Regex::new(r"The newsletter's (HTML|plaintext) content was missing").unwrap();
     // Act - Part 1 - Login
     let login_body = serde_json::json!({
         "username": &app.test_user.username,
@@ -211,17 +210,14 @@ async fn newsletters_returns_422_for_invalid_data() {
     let response = app.post_login(&login_body).await;
     assert_is_redirect_to(&response, "/admin/dashboard");
 
-    // Act - Part 2 - Post the newsletter cases
     for (invalid_body, error_message) in test_cases {
-        let html = app
-            .post_newsletters(invalid_body)
-            .await
-            .text()
-            .await
-            .unwrap();
+        // Act - Part 2 - Post the newsletter cases
+        let _ = app.post_newsletters(invalid_body).await.text().await;
+
+        // Act - Part 3 - Follow the redirect
+        let html = app.get_admin_newsletters_html().await;
 
         assert!(
-            // matcher.is_match(&html),
             html.contains("Part of the form is not filled out"),
             "The API did not fail when the payload was {}.",
             error_message

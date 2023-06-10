@@ -30,7 +30,6 @@ pub async fn publish_newsletter(
     Extension(user_id): Extension<UserId>,
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
-    // WithRejection(Form(body), _): WithRejection<Form<BodyData>, PublishError>,
     body: Result<Form<BodyData>, FormRejection>,
 ) -> Result<impl IntoResponse, PublishError> {
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
