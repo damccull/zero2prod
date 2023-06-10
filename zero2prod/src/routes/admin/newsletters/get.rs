@@ -36,11 +36,11 @@ pub async fn newsletters_publish_form(
         </label>
         <br>
         <label>Plain text body
-            <input type="textarea" placeholder="Enter plain text body" name="content.text">
+            <input type="textarea" placeholder="Enter plain text body" name="text_content">
         </label>
         <br>
         <label>Html body
-            <input type="textarea" placeholder="Enter html body" name="content.html">
+            <input type="textarea" placeholder="Enter html body" name="html_content">
         </label>
         <br>
         <button type="submit">Send newsletter</button>
