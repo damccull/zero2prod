@@ -17,7 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: |
+      - name: Deploy to fly.io 
+        run: |
           cd zero2prod
           flyctl deploy --remote-only
         env:
