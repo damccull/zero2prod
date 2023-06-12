@@ -219,7 +219,7 @@ impl TestApp {
     }
 
     /// Send a get request to the admin dashboard endpoint.
-    pub async fn get_admin_newsletters(&self) -> reqwest::Response {
+    pub async fn get_publish_newsletter(&self) -> reqwest::Response {
         self.api_client
             .get(&format!("{}/admin/newsletters", &self.address))
             .send()
@@ -228,8 +228,8 @@ impl TestApp {
     }
 
     /// Return the html from the admin dashboard
-    pub async fn get_admin_newsletters_html(&self) -> String {
-        self.get_admin_newsletters().await.text().await.unwrap()
+    pub async fn get_publish_newsletter_html(&self) -> String {
+        self.get_publish_newsletter().await.text().await.unwrap()
     }
 
     /// Send a post request to the change admin password endpoint
@@ -268,7 +268,10 @@ impl TestApp {
     }
 
     /// Send a post request to the newsletters endpoint.
-    pub async fn post_newsletters(&self, params: HashMap<String, String>) -> reqwest::Response {
+    pub async fn post_publish_newsletter(
+        &self,
+        params: &HashMap<String, String>,
+    ) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/admin/newsletters", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")

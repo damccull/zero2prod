@@ -97,14 +97,14 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         );
         params
     };
-    let response = app.post_newsletters(body).await;
+    let response = app.post_publish_newsletter(&body).await;
 
     assert_is_redirect_to(&response, "/admin/newsletters");
 
     // Act - Part 3 - Follow the redirect
-    let html = app.get_admin_newsletters_html().await;
+    let html = app.get_publish_newsletter_html().await;
 
-    assert!(html.contains("Successfully sent newsletter"));
+    assert!(html.contains("The newsletter issue has been published"));
 }
 
 #[tokio::test]
@@ -145,14 +145,14 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
         params
     };
 
-    let response = app.post_newsletters(body).await;
+    let response = app.post_publish_newsletter(&body).await;
 
     assert_is_redirect_to(&response, "/admin/newsletters");
 
     // Act - Part 3 - Follow the redirect
-    let html = app.get_admin_newsletters_html().await;
+    let html = app.get_publish_newsletter_html().await;
 
-    assert!(html.contains("Successfully sent newsletter"));
+    assert!(html.contains("The newsletter issue has been published"));
 }
 
 #[tokio::test]
@@ -212,10 +212,14 @@ async fn newsletters_fails_for_invalid_data() {
 
     for (invalid_body, error_message) in test_cases {
         // Act - Part 2 - Post the newsletter cases
-        let _ = app.post_newsletters(invalid_body).await.text().await;
+        let _ = app
+            .post_publish_newsletter(&invalid_body)
+            .await
+            .text()
+            .await;
 
         // Act - Part 3 - Follow the redirect
-        let html = app.get_admin_newsletters_html().await;
+        let html = app.get_publish_newsletter_html().await;
 
         assert!(
             html.contains("Part of the form is not filled out"),
@@ -244,7 +248,7 @@ async fn requests_missing_authorization_are_rejected() {
         params
     };
 
-    let response = app.post_newsletters(body).await;
+    let response = app.post_publish_newsletter(&body).await;
 
     // Assert
     assert_is_redirect_to(&response, "/login")

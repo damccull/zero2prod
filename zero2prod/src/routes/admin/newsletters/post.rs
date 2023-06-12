@@ -71,7 +71,7 @@ pub async fn publish_newsletter(
             }
         }
     }
-    let flash = flash.info("Successfully sent newsletter");
+    let flash = flash.info("The newsletter issue has been published");
 
     Ok((flash, Redirect::to("/admin/newsletters")).into_response())
 }
