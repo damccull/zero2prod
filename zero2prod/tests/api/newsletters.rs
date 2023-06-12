@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use uuid::Uuid;
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -252,4 +253,58 @@ async fn requests_missing_authorization_are_rejected() {
 
     // Assert
     assert_is_redirect_to(&response, "/login")
+}
+
+#[tokio::test]
+async fn newsletter_create_is_idempotent() {
+    // Arrange
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+    app.test_user.login(&app).await;
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    // Act - Part 1 - Submit the newsletter form
+    let newsletter_request_body = {
+        let mut params = HashMap::new();
+
+        params.insert("title".to_string(), "Newsletter title".to_string());
+        params.insert(
+            "text_content".to_string(),
+            "Newsletter body as plain text".to_string(),
+        );
+        params.insert(
+            "html_content".to_string(),
+            "<p>Newsletter body ad HTML</p>".to_string(),
+        );
+        params.insert("idempotency_key".to_string(), Uuid::new_v4().to_string());
+        params
+    };
+    // let newsletter_request_body = serde_json::json!({
+    //     "title": "Newsletter title",
+    //     "text_content": "Newsletter body as plain text",
+    //     "html_content": "<p>Newsletter body as HTML</p>",
+    //     // Endpoint expects the idempotency key as part of the
+    //     // form data, not as a header
+    //     "idempotency_key": uuid::Uuid::new_v4().to_string()
+    // });
+    let response = app.post_publish_newsletter(&newsletter_request_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 2 - Follow the redirect
+    let html_page = app.get_publish_newsletter_html().await;
+    assert!(html_page.contains("The newsletter issue has been published"));
+
+    // Act - Part 3 - Submit the newsletter form _again_
+    let response = app.post_publish_newsletter(&newsletter_request_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 4 - Follow the redirect
+    let html_page = app.get_publish_newsletter_html().await;
+    assert!(html_page.contains("The newsletter issue has been published"));
+    // Mock verifies on drop that we have sent the newsletter
 }
