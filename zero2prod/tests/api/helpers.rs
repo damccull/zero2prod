@@ -275,14 +275,14 @@ impl TestApp {
     }
 
     /// Send a post request to the newsletters endpoint.
-    pub async fn post_publish_newsletter(
-        &self,
-        params: &HashMap<String, String>,
-    ) -> reqwest::Response {
+    pub async fn post_publish_newsletter<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
         self.api_client
             .post(&format!("{}/admin/newsletters", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
-            .form(&params)
+            .form(&body)
             .send()
             .await
             .expect("Failed to execute request.")
