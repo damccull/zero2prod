@@ -23,7 +23,7 @@ mod newsletter_helpers {
         let _mock_guard = Mock::given(path("/email"))
             .and(method("POST"))
             .respond_with(ResponseTemplate::new(200))
-            .named("Create unconfirmed subscriver")
+            .named("Create unconfirmed subscriber")
             .expect(1)
             .mount_as_scoped(&app.email_server)
             .await;
