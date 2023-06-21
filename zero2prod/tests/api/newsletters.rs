@@ -209,7 +209,8 @@ async fn newsletter_create_is_idempotent() {
     // Arrange
     let app = spawn_app().await;
     create_confirmed_subscriber(&app).await;
-    app.test_user.login(&app).await;
+    let response = app.test_user.login(&app).await;
+    assert_is_redirect_to(&response, "/admin/dashboard");
     Mock::given(path("/email"))
         .and(method("POST"))
         .respond_with(ResponseTemplate::new(200))
