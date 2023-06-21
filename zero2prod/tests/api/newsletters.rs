@@ -79,20 +79,11 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
-    let body = {
-        let mut params = HashMap::new();
-
-        params.insert("title".to_string(), "Newsletter title".to_string());
-        params.insert(
-            "text_content".to_string(),
-            "Newsletter body as plain text".to_string(),
-        );
-        params.insert(
-            "html_content".to_string(),
-            "<p>Newsletter body ad HTML</p>".to_string(),
-        );
-        params
-    };
+    let body = serde_json::json!({
+        "title": "Newsletter title",
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
+    });
     let response = app.post_publish_newsletter(&body).await;
 
     assert_is_redirect_to(&response, "/admin/newsletters");
@@ -121,20 +112,11 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
-    let body = {
-        let mut params = HashMap::new();
-
-        params.insert("title".to_string(), "Newsletter title".to_string());
-        params.insert(
-            "text_content".to_string(),
-            "Newsletter body as plain text".to_string(),
-        );
-        params.insert(
-            "html_content".to_string(),
-            "<p>Newsletter body ad HTML</p>".to_string(),
-        );
-        params
-    };
+    let body = serde_json::json!({
+        "title": "Newsletter title",
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
+    });
 
     let response = app.post_publish_newsletter(&body).await;
 
@@ -152,42 +134,24 @@ async fn newsletters_fails_for_invalid_data() {
     let app = spawn_app().await;
     let test_cases = vec![
         (
-            {
-                let mut params = HashMap::new();
-                params.insert(
-                    "text_content".to_string(),
-                    "Newsletter body as plain text".to_string(),
-                );
-                params.insert(
-                    "html_content".to_string(),
-                    "<p>Newsletter body ad HTML</p>".to_string(),
-                );
-                params
-            },
+            serde_json::json!({
+                "text_content": "Newsletter body as plain text",
+                "html_content": "<p>Newsletter body as HTML</p>",
+            }),
             "missing title",
         ),
         (
-            {
-                let mut params = HashMap::new();
-                params.insert("title".to_string(), "Newsletter title".to_string());
-                params.insert(
-                    "html_content".to_string(),
-                    "<p>Newsletter body ad HTML</p>".to_string(),
-                );
-                params
-            },
+            serde_json::json!({
+                "title": "Newsletter title",
+                "html_content": "<p>Newsletter body as HTML</p>",
+            }),
             "missing plaintext content",
         ),
         (
-            {
-                let mut params = HashMap::new();
-                params.insert("title".to_string(), "Newsletter title".to_string());
-                params.insert(
-                    "text_content".to_string(),
-                    "Newsletter body as plain text".to_string(),
-                );
-                params
-            },
+            serde_json::json!({
+                "title": "Newsletter title",
+                "text_content": "Newsletter body as plain text",
+            }),
             "missing HTML content",
         ),
     ];
