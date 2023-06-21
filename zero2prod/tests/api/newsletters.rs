@@ -75,12 +75,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         .await;
 
     // Act - Part 1 - Login
-    let login_body = serde_json::json!({
-        "username": &app.test_user.username,
-        "password": &app.test_user.password,
-    });
-
-    let response = app.post_login(&login_body).await;
+    let response = app.test_user.login(&app).await;
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
@@ -122,12 +117,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
         .await;
 
     // Act - Part 1 - Login
-    let login_body = serde_json::json!({
-        "username": &app.test_user.username,
-        "password": &app.test_user.password,
-    });
-
-    let response = app.post_login(&login_body).await;
+    let response = app.test_user.login(&app).await;
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     // Act - Part 2 - Send Newsletter
@@ -203,12 +193,7 @@ async fn newsletters_fails_for_invalid_data() {
     ];
 
     // Act - Part 1 - Login
-    let login_body = serde_json::json!({
-        "username": &app.test_user.username,
-        "password": &app.test_user.password,
-    });
-
-    let response = app.post_login(&login_body).await;
+    let response = app.test_user.login(&app).await;
     assert_is_redirect_to(&response, "/admin/dashboard");
 
     for (invalid_body, error_message) in test_cases {
