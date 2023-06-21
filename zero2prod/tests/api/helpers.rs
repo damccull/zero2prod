@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
+use reqwest::Response;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -112,12 +113,12 @@ impl TestUser {
         }
     }
 
-    pub async fn login(&self, app: &TestApp) {
+    pub async fn login(&self, app: &TestApp) -> Response {
         app.post_login(&serde_json::json!({
             "username": &self.username,
             "password": &self.password,
         }))
-        .await;
+        .await
     }
     async fn store(&self, pool: &PgPool) {
         let salt = SaltString::generate(&mut rand::thread_rng());
