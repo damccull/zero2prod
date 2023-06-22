@@ -29,7 +29,7 @@ pub async fn publish_newsletter(
     Extension(user_id): Extension<UserId>,
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
-    body: Result<Form<BodyData>, FormRejection>,
+    body: Result<Form<FormData>, FormRejection>,
 ) -> Result<impl IntoResponse, PublishError> {
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let username = get_username(*user_id, &db_pool).await;
@@ -110,7 +110,7 @@ mod newsletter_types {
     }
 
     #[derive(Debug, serde::Deserialize, serde::Serialize)]
-    pub struct BodyData {
+    pub struct FormData {
         pub title: String,
         pub html_content: String,
         pub text_content: String,
