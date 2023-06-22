@@ -114,6 +114,7 @@ mod newsletter_types {
         pub title: String,
         pub html_content: String,
         pub text_content: String,
+        pub idempotency_key: String,
     }
 }
 
