@@ -1,7 +1,8 @@
 use axum::response::IntoResponse;
 use http::StatusCode;
 
-#[derive(Debug)]
+use crate::error_chain_fmt;
+
 pub struct ResponseError {
     status_code: StatusCode,
     internal_error: Box<dyn std::error::Error>,
@@ -37,5 +38,17 @@ where
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
             internal_error,
         }
+    }
+}
+
+impl std::fmt::Debug for ResponseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(&self.internal_error.as_ref(), f)
+    }
+}
+
+impl std::fmt::Display for ResponseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.internal_error.to_string())
     }
 }
