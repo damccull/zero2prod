@@ -15,6 +15,7 @@ use crate::{
     e400,
     email_client::EmailClient,
     error::ResponseError,
+    idempotency::IdempotencyKey,
 };
 
 use newsletter_types::*;
@@ -48,17 +49,21 @@ pub async fn publish_newsletter(
         return Ok((flash, Redirect::to("/admin/newsletters")).into_response());
     };
 
+    let FormData {
+        title,
+        text_content,
+        html_content,
+        idempotency_key,
+    } = body.0;
+
+    let _idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
+
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
         match subscriber {
             Ok(subscriber) => {
                 email_client
-                    .send_email(
-                        &subscriber.email,
-                        &body.title,
-                        &body.text_content,
-                        &body.html_content,
-                    )
+                    .send_email(&subscriber.email, &title, &text_content, &html_content)
                     .await
                     .with_context(|| {
                         format!("Failed to send newsletter issue to {},", subscriber.email)
