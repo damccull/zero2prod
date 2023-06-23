@@ -31,9 +31,7 @@ where
     T: std::fmt::Display + 'static,
     T: Into<Box<dyn std::error::Error>>,
 {
-    // ResponseBadRequestError::from(e)
-    let r = ResponseError::from(e).set_status(StatusCode::BAD_REQUEST);
-    r
+    ResponseError::from(e).set_status(StatusCode::BAD_REQUEST)
 }
 
 pub fn e500<T>(e: T) -> ResponseError
