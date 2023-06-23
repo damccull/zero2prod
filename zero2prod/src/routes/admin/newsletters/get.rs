@@ -20,6 +20,9 @@ pub async fn newsletters_publish_form(
         )
         .unwrap();
     }
+
+    let idempotency_key = uuid::Uuid::new_v4();
+
     let body = format!(
         r#"<!DOCTYPE html>
 <html lang="en">
@@ -30,7 +33,6 @@ pub async fn newsletters_publish_form(
 <body>
     {msg_html}
     <form action="/admin/newsletters" method="post" enctype="application/x-www-form-urlencoded">
-        
         <label>Newsletter Title
             <input type="text" placeholder="Enter newsletter title" name="title">
         </label>
@@ -43,6 +45,7 @@ pub async fn newsletters_publish_form(
             <input type="textarea" placeholder="Enter html body" name="html_content">
         </label>
         <br>
+        <input hidden type="text" name="idempotency_key" value="{idempotency_key}"> 
         <button type="submit">Send newsletter</button>
     </form>
 </body>
