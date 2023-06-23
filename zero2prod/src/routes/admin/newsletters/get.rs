@@ -4,13 +4,13 @@ use axum_flash::IncomingFlashes;
 use axum_macros::debug_handler;
 use std::fmt::Write;
 
-use crate::error::ResponseInternalServerError;
+use crate::error::ResponseError;
 
 #[debug_handler(state = axum_flash::Config)]
 #[tracing::instrument(name = "Publish newsletter issue", skip(flashes))]
 pub async fn newsletters_publish_form(
     flashes: IncomingFlashes,
-) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
+) -> Result<impl IntoResponse, ResponseError> {
     let mut msg_html = String::new();
     for (level, text) in flashes.iter() {
         writeln!(

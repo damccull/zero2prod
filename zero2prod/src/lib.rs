@@ -1,4 +1,5 @@
-use error::{ResponseBadRequestError, ResponseInternalServerError};
+use error::ResponseError;
+use http::StatusCode;
 
 pub mod authentication;
 pub mod configuration;
@@ -24,16 +25,23 @@ pub fn error_chain_fmt(
     Ok(())
 }
 
-pub fn e400<T>(e: T) -> ResponseBadRequestError<T>
+pub fn e400<T>(e: T) -> ResponseError
 where
-    T: std::fmt::Debug + std::fmt::Display + 'static,
+    T: std::fmt::Debug,
+    T: std::fmt::Display + 'static,
+    T: Into<Box<dyn std::error::Error>>,
 {
-    ResponseBadRequestError::from(e)
+    // ResponseBadRequestError::from(e)
+    let r = ResponseError::from(e).set_status(StatusCode::BAD_REQUEST);
+    r
 }
 
-pub fn e500<T>(e: T) -> ResponseInternalServerError<T>
+pub fn e500<T>(e: T) -> ResponseError
 where
-    T: std::fmt::Debug + std::fmt::Display + 'static,
+    T: std::fmt::Debug,
+    T: std::fmt::Display + 'static,
+    T: Into<Box<dyn std::error::Error>>,
 {
-    ResponseInternalServerError::from(e)
+    // ResponseBadRequestError::from(e)
+    ResponseError::from(e)
 }

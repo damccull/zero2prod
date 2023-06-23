@@ -5,12 +5,12 @@ use axum_flash::{IncomingFlashes, Level};
 use http::StatusCode;
 use std::fmt::Write;
 
-use crate::error::ResponseInternalServerError;
+use crate::error::ResponseError;
 
 #[tracing::instrument("Change password form")]
 pub async fn change_password_form(
     flashes: IncomingFlashes,
-) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
+) -> Result<impl IntoResponse, ResponseError> {
     let mut msg_html = String::new();
     for (level, text) in flashes.iter().filter(|m| m.0 == Level::Error) {
         writeln!(

@@ -7,7 +7,7 @@ use sqlx::PgPool;
 use crate::{
     authentication::{get_username, UserId},
     e500,
-    error::ResponseInternalServerError,
+    error::ResponseError,
 };
 
 #[debug_handler]
@@ -15,7 +15,7 @@ use crate::{
 pub async fn admin_dashboard(
     Extension(user_id): Extension<UserId>,
     State(pool): State<PgPool>,
-) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
+) -> Result<impl IntoResponse, ResponseError> {
     let username = get_username(*user_id, &pool).await.map_err(e500)?;
 
     let response = Html((

@@ -12,10 +12,11 @@ use std::sync::Arc;
 use crate::{
     authentication::{get_username, UserId},
     domain::SubscriberEmail,
+    e400,
     email_client::EmailClient,
+    error::ResponseError,
 };
 
-use newsletter_errors::*;
 use newsletter_types::*;
 
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
@@ -30,7 +31,7 @@ pub async fn publish_newsletter(
     State(db_pool): State<PgPool>,
     State(email_client): State<Arc<EmailClient>>,
     body: Result<Form<FormData>, FormRejection>,
-) -> Result<impl IntoResponse, PublishError> {
+) -> Result<impl IntoResponse, ResponseError> {
     tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let username = get_username(*user_id, &db_pool).await;
     if let Ok(username) = username {

@@ -11,7 +11,7 @@ use sqlx::PgPool;
 use crate::{
     authentication::{get_username, validate_credentials, AuthError, Credentials, UserId},
     e500,
-    error::ResponseInternalServerError,
+    error::ResponseError,
 };
 
 #[tracing::instrument(name = "Change password", skip(user_id, form))]
@@ -20,7 +20,7 @@ pub async fn change_password(
     Extension(user_id): Extension<UserId>,
     State(pool): State<PgPool>,
     Form(form): Form<FormData>,
-) -> Result<impl IntoResponse, ResponseInternalServerError<anyhow::Error>> {
+) -> Result<impl IntoResponse, ResponseError> {
     // Ensure the new password is the correct length
     if form.new_password.expose_secret().len() < 12 || form.new_password.expose_secret().len() > 128
     {
@@ -49,7 +49,7 @@ pub async fn change_password(
                 let flash = flash.error("The current password is incorrect.");
                 Ok((flash, Redirect::to("/admin/password")).into_response())
             }
-            AuthError::UnexpectedError(_) => Err(e500(e.into())),
+            AuthError::UnexpectedError(_) => Err(e500(e)),
         };
     }
 
