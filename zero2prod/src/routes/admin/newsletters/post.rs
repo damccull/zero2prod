@@ -121,15 +121,15 @@ mod newsletter_types {
 
 mod newsletter_errors {
     use axum::{extract::rejection::FormRejection, response::IntoResponse};
-    use http::{header, HeaderValue, StatusCode};
+    use http::StatusCode;
 
     use crate::error_chain_fmt;
 
     #[allow(clippy::enum_variant_names)]
     #[derive(thiserror::Error)]
     pub enum PublishError {
-        #[error("Authentication failed")]
-        AuthError(#[source] anyhow::Error),
+        // #[error("Authentication failed")]
+        // AuthError(#[source] anyhow::Error),
         #[error(transparent)]
         UnexpectedError(#[from] anyhow::Error),
         #[error(transparent)]
@@ -146,14 +146,14 @@ mod newsletter_errors {
         fn into_response(self) -> axum::response::Response {
             tracing::error!("{:?}", self);
             match self {
-                PublishError::AuthError(_) => {
-                    let mut response = StatusCode::UNAUTHORIZED.into_response();
-                    let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
-                    response
-                        .headers_mut()
-                        .insert(header::WWW_AUTHENTICATE, header_value);
-                    response
-                }
+                // PublishError::AuthError(_) => {
+                //     let mut response = StatusCode::UNAUTHORIZED.into_response();
+                //     let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
+                //     response
+                //         .headers_mut()
+                //         .insert(header::WWW_AUTHENTICATE, header_value);
+                //     response
+                // }
                 PublishError::UnexpectedError(_) => {
                     StatusCode::INTERNAL_SERVER_ERROR.into_response()
                 }
