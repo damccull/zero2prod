@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use reqwest::Response;

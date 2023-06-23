@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use uuid::Uuid;
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
