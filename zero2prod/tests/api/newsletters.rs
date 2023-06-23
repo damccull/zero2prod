@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -184,22 +182,16 @@ async fn newsletters_fails_for_invalid_data() {
 async fn requests_missing_authorization_are_rejected() {
     // Arrange
     let app = spawn_app().await;
-    let body = {
-        let mut params = HashMap::new();
+    let newsletter_request_body = serde_json::json!({
+        "title": "Newsletter title",
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
+        // Endpoint expects the idempotency key as part of the
+        // form data, not as a header
+        "idempotency_key": uuid::Uuid::new_v4().to_string()
+    });
 
-        params.insert("title".to_string(), "Newsletter title".to_string());
-        params.insert(
-            "text_content".to_string(),
-            "Newsletter body as plain text".to_string(),
-        );
-        params.insert(
-            "html_content".to_string(),
-            "<p>Newsletter body ad HTML</p>".to_string(),
-        );
-        params
-    };
-
-    let response = app.post_publish_newsletter(&body).await;
+    let response = app.post_publish_newsletter(&newsletter_request_body).await;
 
     // Assert
     assert_is_redirect_to(&response, "/login")
