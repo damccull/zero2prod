@@ -1,4 +1,4 @@
-use error::ResponseInternalServerError;
+use error::{ResponseBadRequestError, ResponseInternalServerError};
 
 pub mod authentication;
 pub mod configuration;
@@ -22,6 +22,13 @@ pub fn error_chain_fmt(
         current = cause.source();
     }
     Ok(())
+}
+
+pub fn e400<T>(e: T) -> ResponseBadRequestError<T>
+where
+    T: std::fmt::Debug + std::fmt::Display + 'static,
+{
+    ResponseBadRequestError::from(e)
 }
 
 pub fn e500<T>(e: T) -> ResponseInternalServerError<T>
