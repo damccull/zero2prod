@@ -15,7 +15,7 @@ use crate::{
     e400, e500,
     email_client::EmailClient,
     error::ResponseError,
-    idempotency::{get_saved_response, IdempotencyKey},
+    idempotency::{get_saved_response, save_response, IdempotencyKey},
 };
 
 use newsletter_types::*;
@@ -89,8 +89,11 @@ pub async fn publish_newsletter(
         }
     }
     let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
-
-    Ok((flash, Redirect::to("/admin/newsletters")).into_response())
+    let response = (flash, Redirect::to("/admin/newsletters")).into_response();
+    let response = save_response(&db_pool, &idempotency_key, *user_id, response)
+        .await
+        .map_err(e500)?;
+    Ok(response)
 }
 
 #[tracing::instrument(name = "Get confirmed subscribers", skip(db_pool))]
