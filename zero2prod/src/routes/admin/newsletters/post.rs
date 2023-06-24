@@ -12,13 +12,15 @@ use std::sync::Arc;
 use crate::{
     authentication::{get_username, UserId},
     domain::SubscriberEmail,
-    e400,
+    e400, e500,
     email_client::EmailClient,
     error::ResponseError,
-    idempotency::IdempotencyKey,
+    idempotency::{get_saved_response, IdempotencyKey},
 };
 
 use newsletter_types::*;
+
+static PUBLISH_SUCCESS_INFO_MESSAGE: &str = "The newsletter issue has been published";
 
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
 #[tracing::instrument(
@@ -56,8 +58,17 @@ pub async fn publish_newsletter(
         idempotency_key,
     } = body.0;
 
-    let _idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
+    let idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
+    // Return early if we have a cached response
+    if let Some(saved_response) = get_saved_response(&db_pool, &idempotency_key, *user_id)
+        .await
+        .map_err(e500)?
+    {
+        let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
+        return Ok((flash, saved_response).into_response());
+    }
 
+    // Continue to make full email request if we did not have a cached response
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
     for subscriber in subscribers {
         match subscriber {
@@ -77,7 +88,7 @@ pub async fn publish_newsletter(
             }
         }
     }
-    let flash = flash.info("The newsletter issue has been published");
+    let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
 
     Ok((flash, Redirect::to("/admin/newsletters")).into_response())
 }
