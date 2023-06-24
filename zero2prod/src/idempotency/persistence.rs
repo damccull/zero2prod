@@ -7,9 +7,9 @@ use hyper::body::HttpBody;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+
 use super::IdempotencyKey;
 
-// #[debug_handler(state = crate::startup::AppState)]
 pub async fn get_saved_response(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
