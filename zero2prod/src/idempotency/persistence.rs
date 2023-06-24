@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use super::IdempotencyKey;
 
+#[tracing::instrument(name = "Getting cached newsletter response", skip(pool))]
 pub async fn get_saved_response(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
@@ -34,9 +35,9 @@ pub async fn get_saved_response(
         for HeaderPairRecord { name, value } in r.response_headers {
             let nam = HeaderName::try_from(name)?;
             let val = HeaderValue::try_from(value)?;
-            tracing::trace!("{:?}", &val);
             headers.insert(nam, val);
         }
+        tracing::trace!("SAVED HEADERS {:#?}", &headers);
         let resp = (status_code, headers, r.response_body).into_response();
         Ok(Some(resp))
     } else {
@@ -44,6 +45,7 @@ pub async fn get_saved_response(
     }
 }
 
+#[tracing::instrument(name = "Saving cached newsletter response", skip(pool, http_response))]
 pub async fn save_response(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
