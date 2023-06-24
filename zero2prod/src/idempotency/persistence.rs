@@ -1,6 +1,9 @@
-use axum::response::Response;
+use std::io::Read;
+
+use axum::{body::Full, response::Response};
 use axum_macros::debug_handler;
 use http::{HeaderName, HeaderValue, StatusCode};
+use hyper::body::HttpBody;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -40,7 +43,8 @@ pub async fn get_saved_response(
                 hdrs.insert(nam, val);
             }
         }
-        let resp = response.body(r.response_body)?;
+        let body = Full::new(axum::body::Bytes::from(r.response_body.as_slice())).boxed_unsync();
+        let resp = response.body(body)?;
         Ok(Some(resp))
     } else {
         Ok(None)
