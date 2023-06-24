@@ -1,10 +1,12 @@
 use axum::response::Response;
+use axum_macros::debug_handler;
 use http::{HeaderName, HeaderValue, StatusCode};
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::IdempotencyKey;
 
+// #[debug_handler(state = crate::startup::AppState)]
 pub async fn get_saved_response(
     pool: &PgPool,
     idempotency_key: &IdempotencyKey,
@@ -12,15 +14,15 @@ pub async fn get_saved_response(
 ) -> Result<Option<Response>, anyhow::Error> {
     let saved_response = sqlx::query!(
         r#"
-    SELECT
-        response_status_code,
-        response_headers as "response_headers: Vec<HeaderPairRecord>",
-        response_body
-    FROM idempotency
-    WHERE
-        user_id = $1 AND
-        idempotency_key = $2
-    "#,
+        SELECT
+            response_status_code,
+            response_headers as "response_headers: Vec<HeaderPairRecord>",
+            response_body
+        FROM idempotency
+        WHERE
+            user_id = $1 AND
+            idempotency_key = $2
+        "#,
         user_id,
         idempotency_key.as_ref()
     )
@@ -38,9 +40,11 @@ pub async fn get_saved_response(
                 hdrs.insert(nam, val);
             }
         }
+        let resp = response.body(r.response_body)?;
+        Ok(Some(resp))
+    } else {
+        Ok(None)
     }
-
-    todo!()
 }
 
 #[derive(Debug, sqlx::Type)]
