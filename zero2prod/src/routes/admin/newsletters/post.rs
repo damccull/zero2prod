@@ -15,7 +15,7 @@ use crate::{
     e400, e500,
     email_client::EmailClient,
     error::ResponseError,
-    idempotency::{get_saved_response, save_response, try_processing, IdempotencyKey, NextAction},
+    idempotency::{save_response, try_processing, IdempotencyKey, NextAction},
 };
 
 use newsletter_types::*;
