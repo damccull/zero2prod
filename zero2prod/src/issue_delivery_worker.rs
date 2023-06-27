@@ -15,7 +15,7 @@ pub async fn run_worker_until_stopped(configuration: Settings) -> Result<(), any
     worker_loop(connection_pool, email_client).await
 }
 
-enum ExecutionOutcome {
+pub enum ExecutionOutcome {
     TaskCompleted,
     EmptyQueue,
 }
@@ -42,7 +42,7 @@ async fn worker_loop(pool: PgPool, email_client: EmailClient) -> Result<(), anyh
      ),
      err
 )]
-async fn try_execute_task(
+pub async fn try_execute_task(
     pool: &PgPool,
     email_client: &EmailClient,
 ) -> Result<ExecutionOutcome, anyhow::Error> {

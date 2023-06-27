@@ -103,6 +103,8 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     let html = app.get_publish_newsletter_html().await;
 
     assert!(html.contains("The newsletter issue has been published"));
+    app.dispatch_all_pending_emails().await;
+    //Mock verifies on Drop that we havne't send the newsletter email
 }
 
 #[tokio::test]
@@ -138,6 +140,8 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     let html = app.get_publish_newsletter_html().await;
 
     assert!(html.contains("The newsletter issue has been published"));
+    app.dispatch_all_pending_emails().await;
+    // Mock verifies on Drop that we have send the emails
 }
 
 #[tokio::test]
@@ -247,6 +251,7 @@ async fn newsletter_create_is_idempotent() {
     // Act - Part 4 - Follow the redirect
     let html_page = app.get_publish_newsletter_html().await;
     assert!(html_page.contains(PUBLISH_SUCCESS_INFO_MESSAGE));
+    app.dispatch_all_pending_emails().await;
     // Mock verifies on drop that we have sent the newsletter
 }
 
@@ -283,6 +288,7 @@ async fn concurrent_form_submission_is_handled_gracefully() {
         response2.text().await.unwrap()
     );
 
+    app.dispatch_all_pending_emails().await;
     // Mock verifies on drop that we have only sent the newsletter once
 }
 
