@@ -102,7 +102,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     // Act - Part 3 - Follow the redirect
     let html = app.get_publish_newsletter_html().await;
 
-    assert!(html.contains("The newsletter issue has been published"));
+    assert!(html.contains(PUBLISH_SUCCESS_INFO_MESSAGE));
     app.dispatch_all_pending_emails().await;
     //Mock verifies on Drop that we havne't send the newsletter email
 }
@@ -139,7 +139,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     // Act - Part 3 - Follow the redirect
     let html = app.get_publish_newsletter_html().await;
 
-    assert!(html.contains("The newsletter issue has been published"));
+    assert!(html.contains(PUBLISH_SUCCESS_INFO_MESSAGE));
     app.dispatch_all_pending_emails().await;
     // Mock verifies on Drop that we have send the emails
 }
