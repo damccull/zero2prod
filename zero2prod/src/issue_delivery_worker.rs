@@ -1,7 +1,48 @@
-use crate::{domain::SubscriberEmail, email_client::EmailClient};
+use std::time::Duration;
+
+use crate::{
+    configuration::Settings, domain::SubscriberEmail, email_client::EmailClient,
+    startup::get_db_pool,
+};
 use sqlx::{PgPool, Postgres, Transaction};
 use tracing::{field::display, Span};
 use uuid::Uuid;
+
+pub async fn run_worker_until_stopped(configuration: Settings) -> Result<(), anyhow::Error> {
+    // Set up the worker
+    let connection_pool = get_db_pool(&configuration.database);
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let timeout = configuration.email_client.timeout();
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+        timeout,
+    );
+    worker_loop(connection_pool, email_client).await
+}
+
+enum ExecutionOutcome {
+    TaskCompleted,
+    EmptyQueue,
+}
+
+async fn worker_loop(pool: PgPool, email_client: EmailClient) -> Result<(), anyhow::Error> {
+    loop {
+        match try_execute_task(&pool, &email_client).await {
+            Ok(ExecutionOutcome::EmptyQueue) => {
+                tokio::time::sleep(Duration::from_secs(10)).await;
+            }
+            Ok(ExecutionOutcome::TaskCompleted) => {}
+            Err(_) => {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+}
 
 #[tracing::instrument(
     skip_all,
@@ -11,47 +52,53 @@ use uuid::Uuid;
      ),
      err
 )]
-async fn try_execute_task(pool: &PgPool, email_client: &EmailClient) -> Result<(), anyhow::Error> {
-    if let Some(task) = dequeue_task(pool).await? {
-        Span::current()
-            .record("newsletter_issue_id", &display(task.issue_id))
-            .record("subscriber_email", &display(&task.email));
+async fn try_execute_task(
+    pool: &PgPool,
+    email_client: &EmailClient,
+) -> Result<ExecutionOutcome, anyhow::Error> {
+    let task = dequeue_task(pool).await?;
+    if task.is_none() {
+        return Ok(ExecutionOutcome::EmptyQueue);
+    }
+    let task = task.unwrap();
+    Span::current()
+        .record("newsletter_issue_id", &display(task.issue_id))
+        .record("subscriber_email", &display(&task.email));
 
-        match SubscriberEmail::parse(task.email.clone()) {
-            Ok(email) => {
-                let issue = get_issue(pool, task.issue_id).await?;
-                if let Err(e) = email_client
-                    .send_email(
-                        &email,
-                        &issue.title,
-                        &issue.html_content,
-                        &issue.text_content,
-                    )
-                    .await
-                {
-                    tracing::error!(
-                        error.cause_chain = ?e,
-                        error.message = %e,
-                        "Failed to deliver issue to a confirmed subscriber. Skipping.",
-                    );
-                    // TODO: If there is an error here, call a new method to update a retries count
-                    // instead of allowing the entire transaction to rollback or delete the task. This
-                    // will allow the system to retry the email.
-                }
-            }
-            Err(e) => {
+    match SubscriberEmail::parse(task.email.clone()) {
+        Ok(email) => {
+            let issue = get_issue(pool, task.issue_id).await?;
+            if let Err(e) = email_client
+                .send_email(
+                    &email,
+                    &issue.title,
+                    &issue.html_content,
+                    &issue.text_content,
+                )
+                .await
+            {
                 tracing::error!(
                     error.cause_chain = ?e,
                     error.message = %e,
-                    "Skipping a confirmed subscriber. Their stored contact details are invalid.",
+                    "Failed to deliver issue to a confirmed subscriber. Skipping.",
                 );
-                // Don't attempt to retry for this error because the details are invalid and it
-                // will fail anyways
+                // TODO: If there is an error here, call a new method to update a retries count
+                // instead of allowing the entire transaction to rollback or delete the task. This
+                // will allow the system to retry the email.
             }
         }
-        delete_task(task).await?;
+        Err(e) => {
+            tracing::error!(
+                error.cause_chain = ?e,
+                error.message = %e,
+                "Skipping a confirmed subscriber. Their stored contact details are invalid.",
+            );
+            // Don't attempt to retry for this error because the details are invalid and it
+            // will fail anyways
+        }
     }
-    Ok(())
+    delete_task(task).await?;
+    Ok(ExecutionOutcome::TaskCompleted)
 }
 
 #[tracing::instrument(skip_all)]
