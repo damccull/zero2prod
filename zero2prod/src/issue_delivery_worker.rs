@@ -30,18 +30,23 @@ async fn try_execute_task(pool: &PgPool, email_client: &EmailClient) -> Result<(
                     .await
                 {
                     tracing::error!(
-                            error.cause_chain = ?e,
-                            error.message = %e,
-                            "Failed to deliver issue to a confirmed subscriber. Skipping.",
+                        error.cause_chain = ?e,
+                        error.message = %e,
+                        "Failed to deliver issue to a confirmed subscriber. Skipping.",
                     );
+                    // TODO: If there is an error here, call a new method to update a retries count
+                    // instead of allowing the entire transaction to rollback or delete the task. This
+                    // will allow the system to retry the email.
                 }
             }
             Err(e) => {
                 tracing::error!(
                     error.cause_chain = ?e,
-                        error.message = %e,
-                        "Skipping a confirmed subscriber. Their stored contact details are invalid.",
+                    error.message = %e,
+                    "Skipping a confirmed subscriber. Their stored contact details are invalid.",
                 );
+                // Don't attempt to retry for this error because the details are invalid and it
+                // will fail anyways
             }
         }
         delete_task(task).await?;
