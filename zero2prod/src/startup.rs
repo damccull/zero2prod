@@ -47,17 +47,7 @@ impl Application {
             SessionStore::<SessionRedisPool>::new(Some(redis.into()), session_config);
 
         // Build an email client
-        let timeout = configuration.email_client.timeout();
-        let sender_email = configuration
-            .email_client
-            .sender()
-            .expect("Invalid sender address.");
-        let email_client = EmailClient::new(
-            configuration.email_client.base_url,
-            sender_email,
-            configuration.email_client.authorization_token,
-            timeout,
-        );
+        let email_client = configuration.email_client.client();
 
         let address = format!(
             "{}:{}",
