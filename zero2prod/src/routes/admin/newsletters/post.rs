@@ -15,7 +15,7 @@ use crate::{
     e400, e500,
     email_client::EmailClient,
     error::ResponseError,
-    idempotency::{get_saved_response, save_response, IdempotencyKey},
+    idempotency::{get_saved_response, save_response, try_processing, IdempotencyKey, NextAction},
 };
 
 use newsletter_types::*;
@@ -59,14 +59,18 @@ pub async fn publish_newsletter(
     } = body.0;
 
     let idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
+    // Concurrent idempotency requests wait for first to finish and then
     // Return early if we have a cached response
-    if let Some(saved_response) = get_saved_response(&db_pool, &idempotency_key, *user_id)
+    let transaction = match try_processing(&db_pool, &idempotency_key, *user_id)
         .await
         .map_err(e500)?
     {
-        let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
-        return Ok((flash, saved_response).into_response());
-    }
+        NextAction::StartProcessing(t) => t,
+        NextAction::ReturnSavedResponse(saved_response) => {
+            let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
+            return Ok((flash, saved_response).into_response());
+        }
+    };
 
     // Continue to make full email request if we did not have a cached response
     let subscribers = get_confirmed_subscribers(&db_pool).await?;
@@ -90,7 +94,7 @@ pub async fn publish_newsletter(
     }
     let flash = flash.info(PUBLISH_SUCCESS_INFO_MESSAGE);
     let response = (flash, Redirect::to("/admin/newsletters")).into_response();
-    let response = save_response(&db_pool, &idempotency_key, *user_id, response)
+    let response = save_response(transaction, &idempotency_key, *user_id, response)
         .await
         .map_err(e500)?;
     Ok(response)
