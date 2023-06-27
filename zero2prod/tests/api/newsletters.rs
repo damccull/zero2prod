@@ -4,6 +4,7 @@ use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
 };
+use zero2prod::routes::newsletters::PUBLISH_SUCCESS_INFO_MESSAGE;
 
 use crate::{helpers::spawn_app, login::assert_is_redirect_to};
 
@@ -237,7 +238,7 @@ async fn newsletter_create_is_idempotent() {
 
     // Act - Part 2 - Follow the redirect
     let html_page = app.get_publish_newsletter_html().await;
-    assert!(html_page.contains("The newsletter issue has been published"));
+    assert!(html_page.contains(PUBLISH_SUCCESS_INFO_MESSAGE));
 
     // Act - Part 3 - Submit the newsletter form _again_
     let response = app.post_publish_newsletter(&newsletter_request_body).await;
@@ -245,7 +246,7 @@ async fn newsletter_create_is_idempotent() {
 
     // Act - Part 4 - Follow the redirect
     let html_page = app.get_publish_newsletter_html().await;
-    assert!(html_page.contains("The newsletter issue has been published"));
+    assert!(html_page.contains(PUBLISH_SUCCESS_INFO_MESSAGE));
     // Mock verifies on drop that we have sent the newsletter
 }
 

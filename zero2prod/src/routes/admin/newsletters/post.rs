@@ -18,7 +18,7 @@ use crate::{
 
 use newsletter_types::*;
 
-static PUBLISH_SUCCESS_INFO_MESSAGE: &str = "The newsletter issue has been accepted - \
+pub static PUBLISH_SUCCESS_INFO_MESSAGE: &str = "The newsletter issue has been accepted - \
     emails will go out shortly.";
 
 #[cfg_attr(any(test, debug_assertions), debug_handler(state = crate::startup::AppState ))]
