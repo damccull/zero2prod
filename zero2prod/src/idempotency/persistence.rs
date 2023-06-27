@@ -12,6 +12,7 @@ pub async fn get_saved_response(
     idempotency_key: &IdempotencyKey,
     user_id: Uuid,
 ) -> Result<Option<Response>, anyhow::Error> {
+    tracing::debug!("Getting a saved response for {:?}", idempotency_key);
     let saved_response = sqlx::query!(
         r#"
         SELECT
@@ -28,6 +29,8 @@ pub async fn get_saved_response(
     )
     .fetch_optional(pool)
     .await?;
+
+    tracing::debug!("Got a saved response for {:?}", idempotency_key);
 
     if let Some(r) = saved_response {
         let status_code = StatusCode::from_u16(r.response_status_code.try_into()?)?;
@@ -98,7 +101,7 @@ pub async fn try_processing(
     idempotency_key: &IdempotencyKey,
     user_id: Uuid,
 ) -> Result<NextAction, anyhow::Error> {
-    let transaction = pool.begin().await?;
+    let mut transaction = pool.begin().await?;
     let n_inserted_rows = sqlx::query!(
         r#"
         INSERT INTO idempotency (
@@ -112,13 +115,21 @@ pub async fn try_processing(
         user_id,
         idempotency_key.as_ref(),
     )
-    .execute(pool)
+    .execute(&mut transaction)
     .await?
     .rows_affected();
 
     if n_inserted_rows > 0 {
+        tracing::debug!(
+            "Starting a new transaction for idempotency key {:?}",
+            idempotency_key
+        );
         Ok(NextAction::StartProcessing(transaction))
     } else {
+        tracing::debug!(
+            "Retrieving response for idempotency key {:?}",
+            idempotency_key
+        );
         let saved_response = get_saved_response(pool, idempotency_key, user_id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Expected a saved response but didn't find one"))?;
