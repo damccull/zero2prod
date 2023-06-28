@@ -13,7 +13,7 @@ pub async fn run_worker_until_stopped(configuration: Settings) -> Result<(), any
 async fn worker_loop(pool: PgPool) -> Result<(), anyhow::Error> {
     loop {
         remove_old_idempotency_entries(&pool).await?;
-        tokio::time::sleep(Duration::from_secs(10)).await;
+        tokio::time::sleep(Duration::from_secs(60 * 60 * 24)).await;
     }
 }
 
