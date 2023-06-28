@@ -17,6 +17,7 @@ async fn worker_loop(pool: PgPool) -> Result<(), anyhow::Error> {
     }
 }
 
+#[tracing::instrument(skip_all)]
 pub async fn remove_old_idempotency_entries(pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
