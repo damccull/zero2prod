@@ -7,6 +7,7 @@ use wiremock::MockServer;
 use zero2prod::{
     configuration::{get_configuration, DatabaseSettings},
     email_client::EmailClient,
+    idempotency_remover_worker::remove_old_idempotency_entries,
     issue_delivery_worker::{try_execute_task, ExecutionOutcome},
     startup::{get_db_pool, Application},
     telemetry::{get_subscriber, init_subscriber},
@@ -169,6 +170,11 @@ impl TestApp {
             }
         }
     }
+
+    pub async fn clean_up_idempotency(&self) {
+        remove_old_idempotency_entries(&self.db_pool).await.unwrap();
+    }
+
     /// Send a get request to the admin dashboard endpoint.
     pub async fn get_admin_dashboard(&self) -> reqwest::Response {
         self.api_client

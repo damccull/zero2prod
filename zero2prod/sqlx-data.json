@@ -231,6 +231,16 @@
     },
     "query": "INSERT INTO subscription_tokens (subscription_token, subscriber_id) VALUES ($1, $2)"
   },
+  "8a60cbf6d02e28c88363caa55fe84c01e1e6cbf847b60804919def46517d8318": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        DELETE FROM idempotency\n        WHERE\n            created_at < now() - interval '5 days'\n        "
+  },
   "9341e1139459e8f21883417b57ca8421442532b40de510bae5880a24476753ef": {
     "describe": {
       "columns": [],
