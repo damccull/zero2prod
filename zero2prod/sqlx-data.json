@@ -1,28 +1,17 @@
 {
   "db": "PostgreSQL",
-  "06f83a51e9d2ca842dc0d6947ad39d9be966636700de58d404d8e1471a260c9a": {
+  "028d28194e83e81b7da63e4599d1c2a2a395cdf691b02ad6fc11fd43e7e8374a": {
     "describe": {
-      "columns": [
-        {
-          "name": "newsletter_issue_id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "subscriber_email",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
-        "Left": []
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
       }
     },
-    "query": "\n        SELECT newsletter_issue_id, subscriber_email\n        FROM issue_delivery_queue\n        FOR UPDATE\n        SKIP LOCKED\n        LIMIT 1\n        "
+    "query": "\n        UPDATE issue_delivery_queue\n        SET\n            retries = retries + 1,\n            retry_after = now() + ((interval '1 sec') * retries ^ 2)\n        WHERE\n            newsletter_issue_id = $1 AND\n            subscriber_email = $2\n        "
   },
   "2505b5f942a7bc360ca9fecb14ce8100a721d692b4ace8c7e11cf81d169c8d52": {
     "describe": {
@@ -36,6 +25,36 @@
       }
     },
     "query": "\n    UPDATE users\n    SET password_hash = $1\n    WHERE user_id = $2\n    "
+  },
+  "2c0bf2bddf98ce7cad7c37493069e47cfc4910f8b72b54bc5b2e875dc477340d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "newsletter_issue_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "subscriber_email",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "retries",
+          "ordinal": 2,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "\n        SELECT newsletter_issue_id, subscriber_email, retries\n        FROM issue_delivery_queue\n        WHERE\n            retry_after IS NULL OR now() > retry_after\n        FOR UPDATE\n        SKIP LOCKED\n        LIMIT 1\n        "
   },
   "33b11051e779866db9aeb86d28a59db07a94323ffdc59a5a2c1da694ebe9a65f": {
     "describe": {
