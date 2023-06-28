@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use tokio::task::JoinError;
 use zero2prod::{
-    configuration::get_configuration, issue_delivery_worker::run_worker_until_stopped,
+    configuration::get_configuration, idempotency_remover_worker, issue_delivery_worker,
     startup::Application, telemetry,
 };
 
@@ -17,11 +17,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Application::build(configuration.clone()).await?;
     let app_task = tokio::spawn(app.run_until_stopped());
-    let email_delivery_worker_task = tokio::spawn(run_worker_until_stopped(configuration));
+    let email_delivery_worker_task = tokio::spawn(issue_delivery_worker::run_worker_until_stopped(
+        configuration.clone(),
+    ));
+    let idempotency_cleaner_task = tokio::spawn(
+        idempotency_remover_worker::run_worker_until_stopped(configuration),
+    );
 
     tokio::select! {
         o = app_task => report_exit("API", o),
         o = email_delivery_worker_task => report_exit("Email Delivery Worker", o),
+        o = idempotency_cleaner_task => report_exit("Idempotency Cleaner Worker", o)
     };
 
     Ok(())
