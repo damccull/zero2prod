@@ -7,7 +7,9 @@ on:
       - '**/Cargo.lock'
       - '.github/workflows/audit.yml'
   pull_request:
-    paths: Cargo.lock
+    paths:
+      - "**/Cargo.lock"
+      - '.github/workflows/audit.yml'
 
 jobs:
   cargo-deny:
