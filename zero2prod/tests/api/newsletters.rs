@@ -290,3 +290,44 @@ async fn concurrent_form_submission_is_handled_gracefully() {
     app.dispatch_all_pending_emails().await;
     // Mock verifies on drop that we have only sent the newsletter once
 }
+
+#[tokio::test]
+async fn transient_errors_get_retried() {
+    // Arrange
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(500))
+        .up_to_n_times(1)
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .up_to_n_times(1)
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+
+    // Act - Part 1 - Login
+    app.test_user.login(&app).await;
+
+    // Act - Part 2 - Send Newsletter
+    let body = serde_json::json!({
+        "title": "Newsletter title",
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
+        "idempotency_key": uuid::Uuid::new_v4().to_string(),
+    });
+
+    app.post_publish_newsletter(&body).await;
+
+    app.dispatch_all_pending_emails().await;
+
+    // Mock verifies on Drop that we have attempted to send the email twice.
+    // and the second time should have been successful.
+}
