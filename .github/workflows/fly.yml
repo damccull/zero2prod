@@ -1,25 +1,25 @@
-name: Fly Deploy
-
-on:
-  workflow_run:
-    workflows:
-      - CI/CD Prechecks
-    branches:
-      - main
-    types:
-      - completed
-jobs:
-  deploy:
-    name: Deploy app
-    runs-on: ubuntu-latest
-    # Only deploy the app if the `general` workflow was a success.
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Deploy to fly.io 
-        run: |
-          cd zero2prod
-          flyctl deploy --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+# name: Fly Deploy
+#
+# on:
+#   workflow_run:
+#     workflows:
+#       - CI/CD Prechecks
+#     branches:
+#       - main
+#     types:
+#       - completed
+# jobs:
+#   deploy:
+#     name: Deploy app
+#     runs-on: ubuntu-latest
+#     # Only deploy the app if the `general` workflow was a success.
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: superfly/flyctl-actions/setup-flyctl@master
+#       - name: Deploy to fly.io 
+#         run: |
+#           cd zero2prod
+#           flyctl deploy --remote-only
+#         env:
+#           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
