@@ -15,7 +15,7 @@ name = "zero2prod"
 anyhow = "1.0.75"
 argon2 = { version = "0.5.1", features = ["std"] }
 axum = { version = "0.6.20", features = ["tracing"] }
-axum-extra = { version = "0.7.7", features = ["cookie"] }
+axum-extra = { version = "0.8.0", features = ["cookie"] }
 axum-flash = "0.7.0"
 axum-macros = "0.3.8"
 axum_session = { version = "0.2.3", features = ["redis-db"], default-features = false }
