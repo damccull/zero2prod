@@ -1,16 +1,17 @@
 name: Fly Deploy
 on:
   push:
-    #disable this workflow. To enable, remove this and uncomment the others.
+    
+  workflow_run:
+    workflows:
+      - CI/CD Prechecks
+   #disable this workflow. To enable, remove this and uncomment the 'branches' section.
     branches-ignore:
       - '*'
-#  workflow_run:
-#    workflows:
-#      - CI/CD Prechecks
-#    branches:
-#      - main
-#    types:
-#      - completed
+    #branches:
+    #  - main
+    types:
+      - completed
 jobs:
   deploy:
     name: Deploy app
