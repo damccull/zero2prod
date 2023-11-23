@@ -1,0 +1,29 @@
+name: Fly Deploy
+on:
+  push:
+    
+  workflow_run:
+    workflows:
+      - CI/CD Prechecks
+   #disable this workflow. To enable, remove this and uncomment the 'branches' section.
+    branches-ignore:
+      - '*'
+    #branches:
+    #  - main
+    types:
+      - completed
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    # Only deploy the app if the `general` workflow was a success.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to fly.io 
+        run: |
+          cd zero2prod
+          flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
