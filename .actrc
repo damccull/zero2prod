@@ -1,0 +1,6 @@
+-P ubuntu-latest=catthehacker/ubuntu:full-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+-P ubuntu-20.04=catthehacker/ubuntu:full-20.04
+-P ubuntu-18.04=catthehacker/ubuntu:full-18.04
+--pull=false
+--rm
